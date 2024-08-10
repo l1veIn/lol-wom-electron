@@ -51,7 +51,7 @@ let buffer = null;
 let ai = null;
 
 
-export function setupASR() {
+export function setupASR(win) {
     recognizer = createRecognizer();
     vad = createVad();
     const bufferSizeInSeconds = 30;
@@ -91,6 +91,9 @@ export function setupASR() {
                 let text = r.text.toLowerCase().trim();
                 logger.info(text);
                 clipboard.writeText(text);
+                if(win){
+                    win.webContents.send('asr-message', text)
+                }
                 // console.log(`${index}: ${text}`);
                 index += 1;
             }
@@ -100,6 +103,8 @@ export function setupASR() {
     console.log('ASR started');
 }
 
+
+// 此处需要加入手动释放ASR的函数，需要提PR
 export function stopASR() {
     ai.quit();
     recognizer = null

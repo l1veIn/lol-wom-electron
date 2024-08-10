@@ -17,7 +17,7 @@ export function setupIPC(win) {
   ipcMain.handle('post-url', post)
   ipcMain.handle('start-asr', () => {
     if (!asrRuning) {
-      setupASR();
+      setupASR(win);
       asrRuning = true;
       return true;
     } else {

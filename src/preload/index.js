@@ -8,6 +8,9 @@ const api = {
 		return ipcRenderer.invoke('test')
 	},
 	invoke: (channel, data) => ipcRenderer.invoke(channel, data),
+	on: (channel, func) => ipcRenderer.on(channel, (event, ...args) => func(...args)),
+	removeListener: (channel, func) => ipcRenderer.removeListener(channel, (event, ...args) => func(...args)),
+	removeAllListeners: (channel) => ipcRenderer.removeAllListeners(channel),
 	init_lcu() {
 		return ipcRenderer.invoke('init_lcu')
 	},

@@ -40,7 +40,7 @@ class CustomLogger {
 async function main() {
   const logger = new CustomLogger('my-special-logs.log');
 
-  // 记录一些日志
+  // 记录一些日志 
   logger.log('这是一条信息日志');
   logger.log('这是一条警告日志', 'warn');
   logger.log('这是一条错误日志', 'error');
