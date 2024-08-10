@@ -43,6 +43,7 @@ export function createWindow() {
   if (is.dev && import.meta.env['MAIN_VITE_ELECTRON_RENDERER_URL']) {
     mainWindow.loadURL(import.meta.env['MAIN_VITE_ELECTRON_RENDERER_URL'])
   } else {
-    mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
+    mainWindow.loadURL("http://localhost:8080")
+    // mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
   }
 }

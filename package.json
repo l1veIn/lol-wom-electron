@@ -21,13 +21,17 @@
     "@electron-toolkit/preload": "^3.0.1",
     "@electron-toolkit/utils": "^3.0.0",
     "@nut-tree-fork/nut-js": "^4.2.2",
+    "electron-dl": "^4.0.0",
     "electron-localshortcut": "^3.2.1",
     "electron-store": "^10.0.0",
     "electron-updater": "^6.1.7",
+    "extract-zip": "^2.0.1",
     "league-connect": "^6.0.0-rc13",
     "lodash": "^4.17.21",
     "naudiodon2": "^2.4.0",
+    "rimraf": "^6.0.1",
     "sherpa-onnx-node": "^1.10.20",
+    "unbzip2-stream": "^1.4.3",
     "winston": "^3.13.1"
   },
   "devDependencies": {

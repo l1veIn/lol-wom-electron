@@ -1,9 +1,5 @@
 const portAudio = require('naudiodon2');
-// console.log(portAudio.getDevices());
-import { join } from 'path'
-// import logger from './logger.js';
-// import icon from '../../resources/icon.png?asset'
-
+const { join } = require('path');
 const sherpa_onnx = require('sherpa-onnx-node');
 function createRecognizer() {
   const config = {
@@ -86,23 +82,17 @@ function setupASR(win) {
       const r = recognizer.getResult(stream);
       if (r.text.length > 0) {
         let text = r.text.toLowerCase().trim();
-        // logger.info(text);
-        // // clipboard.writeText(text);
-        // if (win) {
-        //   win.webContents.send('asr-message', text)
-        // }
-        process.send('asr-message', text);
-        // console.log(`${index}: ${text}`);
+        process.send(text);
+        console.log(`${index}: ${text}`);
         index += 1;
       }
     }
   });
   ai.start();
+  process.send('ASR-started');
   console.log('ASR started');
 }
 
-
-// 此处需要加入手动释放ASR的函数，需要提PR
 function stopASR() {
   ai.quit();
   recognizer = null
@@ -117,5 +107,6 @@ process.on('message', (message) => {
     setupASR();
   } else if (message === 'stop-asr') {
     stopASR()
+    process.exit();
   }
 });

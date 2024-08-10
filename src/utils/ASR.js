@@ -114,3 +114,28 @@ export function stopASR() {
     console.log('ASR stopped');
 }
 
+
+
+// 弃用，使用子进程实现
+ // ipc.js中注册
+ // ipcMain.handle('start-asr', () => {
+  //   if (!asrRuning) {
+  //     setupASR(win);
+  //     asrRuning = true;
+  //     return true;
+  //   } else {
+  //     return false;
+  //   }
+  // });
+  // ipcMain.handle('stop-asr', () => {
+  //   if (asrRuning) {
+  //     stopASR();
+  //     asrRuning = false;
+  //     return true;
+  //   } else {
+  //     return false;
+  //   }
+  // });
+  // ipcMain.handle('get-asr-status', () => {
+  //   return asrRuning;
+  // });

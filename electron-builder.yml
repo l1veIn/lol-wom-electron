@@ -12,6 +12,7 @@ asarUnpack:
   - resources/**
 win:
   executableName: lol_wom_electron
+  requestedExecutionLevel: requireAdministrator
 nsis:
   oneClick: false
   artifactName: ${name}-${version}-setup.${ext}
@@ -19,7 +20,6 @@ nsis:
   allowToChangeInstallationDirectory: true
   uninstallDisplayName: ${productName}
   createDesktopShortcut: always
-  requestExecutionLevel: admin
 mac:
   entitlementsInherit: build/entitlements.mac.plist
   extendInfo:
