@@ -1,7 +1,7 @@
 const portAudio = require('naudiodon2');
 const { join } = require('path');
 const sherpa_onnx = require('sherpa-onnx-node');
-function createRecognizer() {
+function createRecognizer(model) {
   const config = {
     'featConfig': {
       'sampleRate': 16000,
@@ -9,10 +9,10 @@ function createRecognizer() {
     },
     'modelConfig': {
       'senseVoice': {
-        'model': join(__dirname, '../resources/model/model.int8.onnx'),
+        'model': join(model, './model.int8.onnx'),
         'useInverseTextNormalization': 1,
       },
-      'tokens': join(__dirname, '../resources/tokens.txt'),
+      'tokens': join(model, './tokens.txt'),
       'numThreads': 2,
       'provider': 'cpu',
       'debug': 1,
@@ -44,8 +44,8 @@ let vad = null;
 let buffer = null;
 let ai = null;
 
-function setupASR(win) {
-  recognizer = createRecognizer();
+function setupASR(model) {
+  recognizer = createRecognizer(model);
   vad = createVad();
   const bufferSizeInSeconds = 30;
   buffer = new sherpa_onnx.CircularBuffer(bufferSizeInSeconds * vad.config.sampleRate);
@@ -103,8 +103,9 @@ function stopASR() {
 }
 
 process.on('message', (message) => {
-  if (message === 'start-asr') {
-    setupASR();
+  if (message.model) {
+    console.log('received model',message.model);
+    setupASR(message.model);
   } else if (message === 'stop-asr') {
     stopASR()
     process.exit();

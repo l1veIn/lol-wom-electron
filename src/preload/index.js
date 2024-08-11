@@ -4,8 +4,8 @@ import { electronAPI } from '@electron-toolkit/preload'
 // Custom APIs for renderer
 const api = {
 	verson: process.version,
-	test(){
-		return ipcRenderer.invoke('test')
+	test(data){
+		return ipcRenderer.invoke('test',data)
 	},
 	invoke: (channel, data) => ipcRenderer.invoke(channel, data),
 	on: (channel, func) => ipcRenderer.on(channel, (event, ...args) => func(...args)),

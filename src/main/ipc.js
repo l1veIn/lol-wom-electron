@@ -13,8 +13,8 @@ const bzip2 = require('unbzip2-stream');
 
 
 let asrProcess = null;
-function test() {
-  console.log('test');
+function test(_,data) {
+  console.log('test',data);
 }
 export function setupIPC(win) {
   ipcMain.handle('test', test);
@@ -23,7 +23,7 @@ export function setupIPC(win) {
   ipcMain.handle('get-client-url', getClientUrl);
   ipcMain.handle('get-url', get);
   ipcMain.handle('post-url', post)
-  ipcMain.handle('start-asr', () => {
+  ipcMain.handle('start-asr', (_,data) => {
     if (!asrProcess) {
       asrProcess = fork(path.join(__dirname, '../../child_process/asr_process.js'));
 
@@ -36,7 +36,8 @@ export function setupIPC(win) {
         console.log('asr process exit');
         asrProcess = null;
       });
-      asrProcess.send('start-asr');
+      asrProcess.send(data);
+      // asrProcess.send('start-asr');
     } else {
       return false;
     }
@@ -57,12 +58,12 @@ export function setupIPC(win) {
     });
     return result.filePaths[0];
   });
-  
+
   ipcMain.handle('check-model-existence', (event, { modelDir, modelName }) => {
-    return fs.existsSync(path.join(modelDir, modelName));
+    return { dir: fs.existsSync(path.join(modelDir, modelName)), tar: fs.existsSync(path.join(modelDir, modelName + '.tar.bz2')) };
   });
-  
-  ipcMain.handle('start-download', async (event, { url, destination, modelName }) => {
+
+  ipcMain.handle('start-download', async (event, { url, destination, modelName, modelDir }) => {
     try {
       await download(win, url, {
         directory: path.dirname(destination),
@@ -72,6 +73,13 @@ export function setupIPC(win) {
         }
       });
       win.webContents.send('download-complete', { success: true, modelName });
+      // fs.createReadStream(source)
+      //   .pipe(bzip2())
+      //   .pipe(tar.extract({ cwd: destination }))
+      //   .on('finish', () => {fs.unlink(filePath, (error) => {});})
+      //   .on('error', (error) => {
+      //     console.error('Extraction failed:', error);
+      //   });
       return true;
     } catch (error) {
       console.error('Download failed:', error);
@@ -79,20 +87,27 @@ export function setupIPC(win) {
       throw error;
     }
   });
-  
+
   ipcMain.handle('extract-model', async (event, { source, destination }) => {
     return new Promise((resolve, reject) => {
       fs.createReadStream(source)
         .pipe(bzip2())
         .pipe(tar.extract({ cwd: destination }))
-        .on('finish', () => resolve(true))
+        .on('finish', () => fs.unlink(source, (error) => {
+          if (error) {
+            console.error('File deletion failed:', error);
+            reject(error);
+          } else {
+            resolve(true);
+          }
+        }))
         .on('error', (error) => {
           console.error('Extraction failed:', error);
           reject(error);
         });
     });
   });
-  
+
   ipcMain.handle('delete-file', (event, filePath) => {
     return new Promise((resolve, reject) => {
       fs.unlink(filePath, (error) => {
@@ -108,17 +123,4 @@ export function setupIPC(win) {
   ipcMain.handle('delete-directory', (event, directoryPath) => {
     return rimraf(directoryPath)
   });
-  
-  // ipcMain.handle('delete-directory', (event, directoryPath) => {
-  //   return new Promise((resolve, reject) => {
-  //     rimraf(directoryPath, (error) => {
-  //       if (error) {
-  //         console.error('Directory deletion failed:', error);
-  //         reject(error);
-  //       } else {
-  //         resolve(true);
-  //       }
-  //     });
-  //   });
-  // });
 }
