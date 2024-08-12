@@ -25,7 +25,7 @@ export function setupIPC(win) {
   ipcMain.handle('post-url', post)
   ipcMain.handle('start-asr', (_,data) => {
     if (!asrProcess) {
-      asrProcess = fork(path.join(__dirname, '../../child_process/asr_process.js'));
+      asrProcess = fork(path.join(__dirname, '../../child_process/asr_process/asr_process.js'));
 
       asrProcess.on('message', (message) => {
         clipboard.writeText(message);
