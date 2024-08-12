@@ -1,7 +1,6 @@
 
 const { join } = require('path');
 function get_config(message) {
-    // console.log(message);
     const config = {
         'featConfig': {
           'sampleRate': 16000,
