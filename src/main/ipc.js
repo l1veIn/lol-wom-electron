@@ -10,8 +10,6 @@ const path = require('path');
 const tar = require('tar');
 const bzip2 = require('unbzip2-stream');
 
-
-
 let asrProcess = null;
 function test(_,data) {
   console.log('test',data);
@@ -123,4 +121,6 @@ export function setupIPC(win) {
   ipcMain.handle('delete-directory', (event, directoryPath) => {
     return rimraf(directoryPath)
   });
+
+
 }

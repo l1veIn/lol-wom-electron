@@ -11,6 +11,8 @@ const api = {
 	on: (channel, func) => ipcRenderer.on(channel, (event, ...args) => func(...args)),
 	removeListener: (channel, func) => ipcRenderer.removeListener(channel, (event, ...args) => func(...args)),
 	removeAllListeners: (channel) => ipcRenderer.removeAllListeners(channel),
+	send: (channel, data) => ipcRenderer.send(channel, data),
+	once: (channel, func) => ipcRenderer.once(channel, (event, ...args) => func(...args)),
 	init_lcu() {
 		return ipcRenderer.invoke('init_lcu')
 	},
