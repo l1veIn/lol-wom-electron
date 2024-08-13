@@ -29,7 +29,9 @@
     "league-connect": "^6.0.0-rc13",
     "lodash": "^4.17.21",
     "naudiodon2": "^2.4.0",
+    "node-global-key-listener": "^0.3.0",
     "rimraf": "^6.0.1",
+    "robotjs": "^0.6.0",
     "sherpa-onnx-node": "^1.10.20",
     "unbzip2-stream": "^1.4.3",
     "winston": "^3.13.1"
