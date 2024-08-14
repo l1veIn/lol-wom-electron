@@ -7,13 +7,9 @@ const {
 } = require("@nut-tree-fork/nut-js");
 
 const { GlobalKeyboardListener } = require('node-global-key-listener');
-
 let register_map = {};
 const v = new GlobalKeyboardListener();
 
-function keyToString(key) {
-    return Array.isArray(key) ? key.join('+') : key;
-}
 function getCondition(keypress, message, down) {
     let keyArr = message.key.split('+');
     if (keyArr.length == 1) {
@@ -23,14 +19,17 @@ function getCondition(keypress, message, down) {
     }
 }
 
+function input(message) {
+    process.send(message);
+}
+
 async function register(message) {
     let runner;
     if (message.script) {
         runner = require(message.script);
     } else {
-        runner = () => { console.log('no script') };
+        runner = async () => { process.send({sendClipboard2Game:true}) };
     }
-    // const { runner } = require(message.script);
     if (register_map[message.key]) {
         console.log(`shortcut ${message.key} registed, updating...`);
         unregister(message);
@@ -39,31 +38,29 @@ async function register(message) {
         runner: runner,
         isRunning: false,
         listener: async (keypress, down) => {
-            // console.log(`catch keypress: ${keypress.name}`);
-            if(!getCondition(keypress, message, down)){
+            if (!getCondition(keypress, message, down)) {
                 return
             }
             if (!register_map[message.key].isRunning) {
                 console.log(`catch keypress: ${keypress.name}`);
                 register_map[message.key].isRunning = true;
-                console.log(`run script: ${message.script}`);
+                console.log(`run script: ${message.key}`);
                 try {
-                    await runner(mouse, straightTo, Point, keyboard, Key);
+                    runner(mouse, straightTo, Point, keyboard, Key, input);
                 } catch (error) {
                     console.error(`script error: ${error}`);
                 } finally {
                     register_map[message.key].isRunning = false;
-                    console.log(`script finished: ${message.script}`);
+                    console.log(`script finished: ${message.key}`);
                 }
             } else if (register_map[message.key].isRunning) {
-                console.log(`script ${message.script} running, ignore ${message.key}`);
+                console.log(`script ${message.key} running, ignore ${message.key}`);
             }
         }
     };
     v.addListener(register_map[message.key].listener);
-    console.log(`registed ${message.key} to run: ${message.script}`);
+    console.log(`registed ${message.key} to run: ${message.script || 'inputer clipborad'}`);
 }
-
 
 function unregister(message) {
     if (register_map[message.key]) {
@@ -83,7 +80,7 @@ function stopASR() {
     register_map = {};
 }
 
-process.on('message', (message) => {
+process.on('message', async(message) => {
     if (message.key) {
         console.log('catch message:', message.key);
         if (message.remove) {
@@ -97,4 +94,4 @@ process.on('message', (message) => {
     }
 });
 
-console.log("waiting for message...");
+console.log("waiting for shortcut...");
