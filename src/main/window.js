@@ -1,4 +1,4 @@
-import { BrowserWindow } from 'electron';
+import { BrowserWindow ,app} from 'electron';
 import { join } from 'path'
 import { setupIPC } from './ipc';
 import { is} from '@electron-toolkit/utils'
@@ -20,7 +20,7 @@ export function createWindow() {
 			symbolColor: 'white'
 		},
 		movable: true,
-		alwaysOnTop: true,
+		// alwaysOnTop: true,
 		show: false,
     icon,
     webPreferences: {
@@ -46,4 +46,8 @@ export function createWindow() {
     mainWindow.loadURL("http://localhost:8080")
     // mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
   }
+
+  mainWindow.on('closed', () => {
+    app.quit()
+  })
 }

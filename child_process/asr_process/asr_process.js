@@ -38,10 +38,10 @@ function setupASR(message) {
     inOptions: {
       channelCount: 1,
       closeOnError: false,
-      deviceId: -1,
+      deviceId: message.device,
       sampleFormat: portAudio.SampleFormatFloat32,
       sampleRate: vad.config.sampleRate,
-      framesPerBuffer: 1024
+      // framesPerBuffer: 1024
     }
   });
   let printed = false;
