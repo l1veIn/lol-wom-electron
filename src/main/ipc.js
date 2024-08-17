@@ -11,9 +11,8 @@ let sender = new ChildProcessManager(path.join(__dirname, '../../child_process/s
 sender.start()
 async function test(_, data) {
   console.log('test', data);
-  sender.send('111')
 }
-export function setupIPC(win) {
+export function setupIPC(win,store) {
   ipcMain.handle('test', test);
   ipcMain.handle('init_lcu', () => init_lcu(win));
   ipcMain.handle('current-summoner', getCurrentSummoner);

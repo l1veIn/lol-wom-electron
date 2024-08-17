@@ -4,7 +4,7 @@ import vue from '@vitejs/plugin-vue'
 
 export default defineConfig({
   main: {
-    plugins: [externalizeDepsPlugin({ exclude: ['electron-dl'] }),bytecodePlugin()],
+    plugins: [externalizeDepsPlugin({ exclude: ['electron-dl','electron-store'] }),bytecodePlugin()],
     build: {
       rollupOptions: {
         output: {
