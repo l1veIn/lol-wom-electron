@@ -1,4 +1,4 @@
-import { ipcMain, dialog } from 'electron';
+import { ipcMain, dialog,shell } from 'electron';
 import { init_lcu, getCurrentSummoner, get, post, getClientUrl } from '../lcu/client';
 import ChildProcessManager from '../utils/child_process_manager.js';
 
@@ -19,6 +19,7 @@ export function setupIPC(win,store) {
   ipcMain.handle('get-client-url', getClientUrl);
   ipcMain.handle('get-url', get);
   ipcMain.handle('post-url', post)
+  ipcMain.handle('open-url', (event, url) => shell.openExternal(url))
   setupASR(win)
   setupASRModelManager(win)
   setupShortcut(win,sender)
