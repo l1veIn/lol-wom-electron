@@ -21,6 +21,7 @@ export async function init_lcu(win) {
 	})
 	ws.subscribe('/lol-gameflow/v1/gameflow-phase', (data, event) => {
 		console.log(data)
+		win.webContents.send('game-phase-change', data);
 	})
 	let handleConnect = _.debounce(() => {
 		win.webContents.send('client-status', 2)
