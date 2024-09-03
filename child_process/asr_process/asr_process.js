@@ -8,10 +8,22 @@ function createRecognizer(message) {
   console.log({config});
   return new sherpa_onnx.OfflineRecognizer(config);
 }
+let vad_path = join(__dirname, '../../resources/model/silero_vad.onnx')
+// const isDev = process.env.NODE_ENV === 'development';
+// let vad_path;
+
+// if (isDev) {
+//   vad_path = join(__dirname, '../../resources/model/silero_vad.onnx');
+// } else {
+//   vad_path = join(__dirname, '../../resources/app.asar.unpacked/model/silero_vad.onnx');
+// }
+
+console.log('VAD模型路径:', vad_path);
+
 function createVad() {
   const config = {
     sileroVad: {
-      model: join(__dirname, '../../resources/model/silero_vad.onnx'),
+      model: vad_path,
       threshold: 0.5,
       minSpeechDuration: 0.25,
       minSilenceDuration: 0.5,

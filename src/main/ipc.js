@@ -1,4 +1,6 @@
-import { ipcMain, dialog,shell } from 'electron';
+import { ipcMain, dialog, shell, BrowserWindow } from 'electron';
+import icon from '../../resources/icon.png?asset'
+
 import { init_lcu, getCurrentSummoner, get, post, getClientUrl } from '../lcu/client';
 import ChildProcessManager from '../utils/child_process_manager.js';
 
@@ -12,7 +14,7 @@ sender.start()
 async function test(_, data) {
   console.log('test', data);
 }
-export function setupIPC(win,store) {
+export function setupIPC(win, store) {
   ipcMain.handle('test', test);
   ipcMain.handle('init_lcu', () => init_lcu(win));
   ipcMain.handle('current-summoner', getCurrentSummoner);
@@ -20,7 +22,26 @@ export function setupIPC(win,store) {
   ipcMain.handle('get-url', get);
   ipcMain.handle('post-url', post)
   ipcMain.handle('open-url', (event, url) => shell.openExternal(url))
+  ipcMain.handle('open-url-in-window', (event, tool) => {
+    const newWindow = new BrowserWindow({
+      width: tool.width ,
+      height: tool.height,
+      maximizable: false,
+      autoHideMenuBar: true,
+      titleBarOverlay: {
+        color: 'rgba(0,0,0,0)',
+        height: 35,
+        symbolColor: 'white'
+      },
+      movable: true,
+      icon,
+      webPreferences: {
+        sandbox: false
+      }
+    });
+    newWindow.loadURL(tool.url);
+  });
   setupASR(win)
   setupASRModelManager(win)
-  setupShortcut(win,sender)
+  setupShortcut(win, sender)
 }
