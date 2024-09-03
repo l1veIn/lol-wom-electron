@@ -41,9 +41,11 @@ export function createWindow() {
   // HMR for renderer base on electron-vite cli.
   // Load the remote URL for development or the local html file for production.
   if (is.dev && import.meta.env['MAIN_VITE_ELECTRON_RENDERER_URL']) {
-    mainWindow.loadURL(import.meta.env['MAIN_VITE_ELECTRON_RENDERER_URL'])
+    mainWindow.loadURL("https://kaihei.online/lol-wom-helper")
+    // mainWindow.loadURL(import.meta.env['MAIN_VITE_ELECTRON_RENDERER_URL'])
   } else {
-    mainWindow.loadURL("http://localhost:8080")
+    mainWindow.loadURL("https://kaihei.online/lol-wom-helper")
+    // mainWindow.loadURL("http://localhost:8080")
     // mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
   }
 
