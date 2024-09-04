@@ -23,7 +23,7 @@ console.log('VAD模型路径:', vad_path);
 function createVad() {
   const config = {
     sileroVad: {
-      model: vad_path,
+      model: vad_path.replace('app.asar', 'app.asar.unpacked'),
       threshold: 0.5,
       minSpeechDuration: 0.25,
       minSilenceDuration: 0.5,

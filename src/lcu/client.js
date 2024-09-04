@@ -57,6 +57,11 @@ export async function get(_, url, body) {
 	return response.json()
 }
 export async function post(_, url, body) {
+	console.log({
+		url
+	}, {
+		body
+	})
 	const response = await createHttp1Request({
 		method: 'POST',
 		url,

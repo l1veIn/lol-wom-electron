@@ -4,14 +4,14 @@ const { ipcMain, clipboard } = require('electron');
 const { fork } = require('child_process');
 const path = require('path');
 
-import Store from 'electron-store';
+// import Store from 'electron-store';
 // 创建一个新的 Store 实例
-const store = new Store();
+// const store = new Store();
 
 export function setupShortcut(win, sender) {
     // 存储当前注册的快捷键状态
-    let currentStatus = store.get('currentStatus', {});
-    
+    // let currentStatus = store.get('currentStatus', {});
+    let currentStatus = {}
     let shortcutProcess = new ChildProcessManager(path.join(__dirname, '../../child_process/nut/handle_nut.js'))
     shortcutProcess.start()
 
@@ -37,7 +37,7 @@ export function setupShortcut(win, sender) {
         try {
             shortcutProcess.send({ key: shortcut, script: script });
             currentStatus[shortcut] = script || '';
-            store.set('currentStatus', currentStatus);
+            // store.set('currentStatus', currentStatus);
         } catch (error) {
             console.error(`Error registering shortcut: ${shortcut}`, error);
             return false;
