@@ -1,4 +1,4 @@
-import { ipcMain, dialog, shell, BrowserWindow } from 'electron';
+import { ipcMain, dialog, shell, BrowserWindow, app } from 'electron';
 import icon from '../../resources/icon.png?asset'
 
 import { init_lcu, getCurrentSummoner, get, post, getClientUrl } from '../lcu/client';
@@ -16,6 +16,16 @@ async function test(_, data) {
 }
 export function setupIPC(win, store) {
   ipcMain.handle('test', test);
+  ipcMain.handle('reboot', () => {
+    app.quit()
+  })
+  ipcMain.handle('move_to_front', () => {
+    win.setAlwaysOnTop(true)
+    win.moveTop();
+    win.show()
+    win.focus();
+    win.setAlwaysOnTop(false)
+  })
   ipcMain.handle('init_lcu', () => init_lcu(win));
   ipcMain.handle('current-summoner', getCurrentSummoner);
   ipcMain.handle('get-client-url', getClientUrl);

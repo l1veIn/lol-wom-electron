@@ -49,7 +49,7 @@ export function setupShortcut(win, sender) {
         try {
             shortcutProcess.send({ key: shortcut, remove: true });
             delete currentStatus[shortcut];
-            store.set('currentStatus', currentStatus);
+            // store.set('currentStatus', currentStatus);
             return true;
         } catch (error) {
             console.error(`Error unregistering shortcut: ${shortcut}`, error);
