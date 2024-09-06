@@ -8,6 +8,7 @@ async function sendClipboard2Game(message) {
   await sleep(65)
   input.sendKeysX(message)
   await sleep(65)
+  // 延迟需要根据实际情况调整
   input.sendKey(13, true)
   input.sendKey(13, false)
 }

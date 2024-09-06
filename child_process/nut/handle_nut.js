@@ -25,7 +25,12 @@ function input(message) {
 
 async function register(message) {
     let runner;
-    if (message.script) {
+    // 处理几个特殊键，直接执行
+    if (message.key == 'PAGE UP') {
+        runner = async () => { process.send({onPageUp:true}) };
+    } else if (message.key == 'PAGE DOWN') {
+        runner = async () => { process.send({onPageDown:true}) };
+    } else if (message.script) {
         runner = require(message.script);
     } else {
         runner = async () => { process.send({sendClipboard2Game:true}) };

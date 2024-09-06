@@ -14,7 +14,12 @@ export function setupShortcut(win, sender) {
     let currentStatus = {}
     let shortcutProcess = new ChildProcessManager(path.join(__dirname, '../../child_process/nut/handle_nut.js'))
     shortcutProcess.start()
-
+    
+    // 注册默认的快捷键
+    shortcutProcess.send({ key: 'PAGE UP', script: '' });
+    currentStatus['PAGE UP'] = '';
+    shortcutProcess.send({ key: 'PAGE DOWN', script: '' });
+    currentStatus['PAGE DOWN'] = '';
     // 打印当前快捷键状态并注册
     Object.entries(currentStatus).forEach(([key, value]) => {
         console.log(key + ': ' + value);
@@ -24,6 +29,10 @@ export function setupShortcut(win, sender) {
     shortcutProcess.on('message', (message) => {
         if (message.sendClipboard2Game) {
             sender.send({ ...message, data: clipboard.readText() })
+        } else if (message.onPageUp) {
+            win.webContents.send('press_page_up')
+        } else if (message.onPageDown) {
+            win.webContents.send('press_page_down')
         } else {
             sender.send({ ...message })
         }

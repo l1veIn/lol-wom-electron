@@ -26,6 +26,9 @@ export function setupIPC(win, store) {
     win.focus();
     win.setAlwaysOnTop(false)
   })
+  ipcMain.handle('send-msg-to-game', (event, message) => {
+    sender.send({ sendClipboard2Game: true, data: message })
+  })
   ipcMain.handle('init_lcu', () => init_lcu(win));
   ipcMain.handle('current-summoner', getCurrentSummoner);
   ipcMain.handle('get-client-url', getClientUrl);
@@ -34,7 +37,7 @@ export function setupIPC(win, store) {
   ipcMain.handle('open-url', (event, url) => shell.openExternal(url))
   ipcMain.handle('open-url-in-window', (event, tool) => {
     const newWindow = new BrowserWindow({
-      width: tool.width ,
+      width: tool.width,
       height: tool.height,
       maximizable: false,
       autoHideMenuBar: true,
