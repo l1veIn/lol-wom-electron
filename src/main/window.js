@@ -4,6 +4,7 @@ import { setupIPC } from './ipc';
 import { is } from '@electron-toolkit/utils'
 
 import icon from '../../resources/icon.png?asset'
+import defaultPage from '../../resources/default.html?asset'
 
 export function createWindow() {
   // Create the browser window.
@@ -60,7 +61,7 @@ export function createWindow() {
       if (isAvailable) {
         mainWindow.loadURL(defaultUrl);
       } else {
-        mainWindow.loadFile(join(__dirname, '../renderer/default.html'));
+        mainWindow.loadFile(defaultPage);
       }
     };
     loadUrlOrDefault();

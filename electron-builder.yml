@@ -1,5 +1,5 @@
-appId: com.electron.app
-productName: lol_wom_electron
+appId: com.lol_wom.app
+productName: lol_wom_helper
 directories:
   buildResources: build
 files:
@@ -11,14 +11,14 @@ files:
 asarUnpack:
   - resources/**
 win:
-  executableName: lol_wom_electron
+  executableName: LOL互动助手
   requestedExecutionLevel: requireAdministrator
 nsis:
   oneClick: false
   artifactName: ${name}-${version}-setup.${ext}
-  shortcutName: ${productName}
+  shortcutName: LOL互动助手
   allowToChangeInstallationDirectory: true
-  uninstallDisplayName: ${productName}
+  uninstallDisplayName: LOL互动助手
   createDesktopShortcut: always
 mac:
   entitlementsInherit: build/entitlements.mac.plist
