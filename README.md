@@ -1,4 +1,4 @@
-<div align="center">
+<div>
   <div>
     <img
     src="/build/icon.png"
@@ -7,6 +7,7 @@
     />
   </div>
 </div>
+
 # lol互动助手
 
 目前实现的功能：
