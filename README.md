@@ -39,4 +39,4 @@ $ npm run build:mac
 # For Linux
 $ npm run build:linux
 ```
-[logo]:/build/logo.png "LOL互动小助手"
+[logo]:/build/icon.png "LOL互动小助手"
