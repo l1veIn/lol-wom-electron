@@ -5,20 +5,9 @@ const get_config = require('./get_config');
 
 function createRecognizer(message) {
   const config = get_config(message);
-  console.log({config});
   return new sherpa_onnx.OfflineRecognizer(config);
 }
 let vad_path = join(__dirname, '../../resources/model/silero_vad.onnx')
-// const isDev = process.env.NODE_ENV === 'development';
-// let vad_path;
-
-// if (isDev) {
-//   vad_path = join(__dirname, '../../resources/model/silero_vad.onnx');
-// } else {
-//   vad_path = join(__dirname, '../../resources/app.asar.unpacked/model/silero_vad.onnx');
-// }
-
-console.log('VAD模型路径:', vad_path);
 
 function createVad() {
   const config = {
@@ -56,7 +45,6 @@ function setupASR(message) {
       // framesPerBuffer: 1024
     }
   });
-  let printed = false;
   let index = 0;
   ai.on('data', data => {
     const windowSize = vad.config.sileroVad.windowSize;

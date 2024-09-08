@@ -1,3 +1,5 @@
+// 参考自 https://github.com/Hanxven/LeagueAkari/tree/main/addons/input
+
 const input = require('./laInputWin32x64')
 function sleep(time) {
   return new Promise((resolve) => setTimeout(resolve, time))

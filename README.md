@@ -1,6 +1,13 @@
-# lol_wom_electron
 
-An Electron application with Vue
+# lol互动助手
+
+目前实现的功能：
+
+1. 查看隐藏战绩
+2. 选择英雄时自动查询队友最近战绩，进游戏后可查询所有人战绩
+3. 一键发送战绩
+4. 语音转录功能，支持字幕，可以实时将语音转录为文字并写入剪贴板
+5. 一键发送剪贴板内容到游戏
 
 ## Recommended IDE Setup
 

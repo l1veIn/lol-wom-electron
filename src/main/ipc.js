@@ -16,6 +16,9 @@ async function test(_, data) {
 }
 export function setupIPC(win, store) {
   ipcMain.handle('test', test);
+  ipcMain.handle('get-version', () => {
+    return app.getVersion()
+  })
   ipcMain.handle('reboot', () => {
     app.quit()
   })
