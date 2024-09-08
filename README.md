@@ -1,4 +1,4 @@
-
+`![][logo]`|![][logo]
 # lol互动助手
 
 目前实现的功能：
@@ -39,3 +39,4 @@ $ npm run build:mac
 # For Linux
 $ npm run build:linux
 ```
+[logo]:/build/logo.png "LOL互动小助手"
