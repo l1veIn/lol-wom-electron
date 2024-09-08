@@ -1,4 +1,12 @@
-![][logo]
+<div align="center">
+  <div>
+    <img
+    src="/build/icon.png"
+    width="128"
+    height="128"
+    />
+  </div>
+</div>
 # lol互动助手
 
 目前实现的功能：
