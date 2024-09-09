@@ -7,6 +7,7 @@ import ChildProcessManager from '../utils/child_process_manager.js';
 import { setupASR } from '../ipc/asr';
 import { setupASRModelManager } from '../ipc/asr_model_manager';
 import { setupShortcut } from '../ipc/shortcut';
+import { setupNedb } from '../ipc/nedb';
 const path = require('path');
 
 let sender = new ChildProcessManager(path.join(__dirname, '../../child_process/sender/sender.js'))
@@ -60,4 +61,5 @@ export function setupIPC(win, store) {
   setupASR(win)
   setupASRModelManager(win)
   setupShortcut(win, sender)
+  setupNedb()
 }
