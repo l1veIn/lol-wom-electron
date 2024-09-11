@@ -16,9 +16,7 @@ export function setupShortcut(win, sender) {
     shortcutProcess.start()
     
     // 注册默认的快捷键
-    shortcutProcess.send({ key: 'PAGE UP', script: '' });
     currentStatus['PAGE UP'] = '';
-    shortcutProcess.send({ key: 'PAGE DOWN', script: '' });
     currentStatus['PAGE DOWN'] = '';
     // 打印当前快捷键状态并注册
     Object.entries(currentStatus).forEach(([key, value]) => {

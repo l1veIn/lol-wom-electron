@@ -5,7 +5,7 @@ import { is } from '@electron-toolkit/utils'
 
 import icon from '../../resources/icon.png?asset'
 import defaultPage from '../../resources/default.html?asset'
-
+import _ from 'lodash'
 export function createWindow() {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
@@ -64,6 +64,33 @@ export function createWindow() {
     };
     loadUrlOrDefault();
   }
+  // let lastPosition = { x: 0, y: 0 }
+
+  // mainWindow.on('move', () => {
+  //   const currentPosition = mainWindow.getPosition()
+  //   const deltaX = currentPosition[0] - lastPosition.x
+  //   const deltaY = currentPosition[1] - lastPosition.y
+
+  //   mainWindow.webContents.send('window-moved', { deltaX, deltaY })
+
+  //   lastPosition = { x: currentPosition[0], y: currentPosition[1] }
+  // })
+
+  let lastPosition = { x: 0, y: 0 }
+
+  const sendWindowMoved = _.throttle((deltaX, deltaY) => {
+    mainWindow.webContents.send('window-moved', { deltaX, deltaY })
+  }, 16) // 约60fps，可以根据需要调整
+
+  mainWindow.on('move', () => {
+    const currentPosition = mainWindow.getPosition()
+    const deltaX = currentPosition[0] - lastPosition.x
+    const deltaY = currentPosition[1] - lastPosition.y
+
+    sendWindowMoved(deltaX, deltaY)
+
+    lastPosition = { x: currentPosition[0], y: currentPosition[1] }
+  })
 
   mainWindow.on('closed', () => {
     app.quit()
