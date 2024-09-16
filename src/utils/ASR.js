@@ -89,7 +89,6 @@ export function setupASR(win) {
             const r = recognizer.getResult(stream);
             if (r.text.length > 0) {
                 let text = r.text.toLowerCase().trim();
-                logger.info(text);
                 clipboard.writeText(text);
                 if(win){
                     win.webContents.send('asr-message', text)

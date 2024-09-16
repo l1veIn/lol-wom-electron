@@ -3,13 +3,43 @@ const { join } = require('path');
 const sherpa_onnx = require('sherpa-onnx-node');
 const get_config = require('./get_config');
 
-function createRecognizer(message) {
-  const config = get_config(message);
-  return new sherpa_onnx.OfflineRecognizer(config);
+
+// const logger = require('../../src/utils/logger');
+
+const winston = require('winston');
+let logger = null;
+
+
+function initLogger(path) {
+  logger = winston.createLogger({
+    level: 'info',
+    format: winston.format.combine(
+      winston.format.timestamp(),
+      winston.format.json()
+    ),
+    transports: [
+      new winston.transports.File({ filename: join(path, 'asr_process.log') })
+    ]
+  });
+  logger.add(new winston.transports.Console({
+    format: winston.format.simple(),
+  }));
 }
+
+
+function createRecognizer(message) {
+  logger.info('开始创建识别器', { message });
+  const config = get_config(message);
+  logger.debug('识别器配置', { config });
+  const recognizer = new sherpa_onnx.OfflineRecognizer(config);
+  logger.info('识别器创建完成');
+  return recognizer;
+}
+
 let vad_path = join(__dirname, '../../resources/model/silero_vad.onnx')
 
 function createVad() {
+  logger.info('开始创建 VAD');
   const config = {
     sileroVad: {
       model: vad_path.replace('app.asar', 'app.asar.unpacked'),
@@ -22,15 +52,20 @@ function createVad() {
     debug: true,
     numThreads: 1,
   };
+  logger.debug('VAD 配置', { config });
   const bufferSizeInSeconds = 60;
-  return new sherpa_onnx.Vad(config, bufferSizeInSeconds);
+  const vad = new sherpa_onnx.Vad(config, bufferSizeInSeconds);
+  logger.info('VAD 创建完成');
+  return vad;
 }
+
 let recognizer = null;
 let vad = null;
 let buffer = null;
 let ai = null;
 
 function setupASR(message) {
+  logger.info('开始设置 ASR', { message });
   recognizer = createRecognizer(message);
   vad = createVad();
   const bufferSizeInSeconds = 30;
@@ -45,6 +80,8 @@ function setupASR(message) {
       // framesPerBuffer: 1024
     }
   });
+  logger.debug('音频输入设置完成', { deviceId: message.device });
+
   let index = 0;
   ai.on('data', data => {
     const windowSize = vad.config.sileroVad.windowSize;
@@ -68,31 +105,37 @@ function setupASR(message) {
       if (r.text.length > 0) {
         let text = r.text.toLowerCase().trim();
         process.send(text);
-        console.log(`${index}: ${text}`);
+        logger.debug('识别结果', { index, text });
         index += 1;
       }
     }
   });
+
   ai.start();
   process.send('ASR-started');
-  console.log('ASR started');
+  logger.info('ASR 启动完成');
 }
 
 function stopASR() {
+  logger.info('开始停止 ASR');
   ai.quit();
   recognizer = null
   vad = null
   buffer = null
   ai = null
-  console.log('ASR stopped');
+  logger.info('ASR 已停止');
 }
 
 process.on('message', (message) => {
   if (message.model) {
-    console.log('received model', message.model);
+    initLogger(message.logPath);
+    logger.info('收到模型信息', { model: message.model });
     setupASR(message);
   } else if (message === 'stop-asr') {
+    logger.info('收到停止 ASR 命令');
     stopASR()
     process.exit();
   }
 });
+
+console.log('ASR 进程初始化完成');

@@ -5,7 +5,7 @@ import path from 'path';
 
 // 配置日志文件的路径
 const logPath = path.join(app.getPath('userData'), 'logs');
-// console.log({logPath})
+console.log({logPath})
 // 创建 Winston logger
 const logger = winston.createLogger({
   level: 'info',
