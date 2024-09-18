@@ -1,6 +1,6 @@
 import { ipcMain, dialog, shell, BrowserWindow, app } from 'electron';
 import icon from '../../resources/icon.png?asset'
-
+const { exec } = require('child_process');
 import { init_lcu, getCurrentSummoner, get, post, getClientUrl } from '../lcu/client';
 import ChildProcessManager from '../utils/child_process_manager.js';
 
@@ -57,6 +57,15 @@ export function setupIPC(win, store) {
       }
     });
     newWindow.loadURL(tool.url);
+  });
+  ipcMain.handle('exec-cmd', (event, cmd) => {
+    exec(cmd, (error, stdout, stderr) => {
+      if (error) {
+        console.error(`执行命令时发生错误: ${error.message}`);
+        return;
+      }
+      console.log(`命令输出: ${stdout}`);
+    });
   });
   setupASR(win)
   setupASRModelManager(win)
