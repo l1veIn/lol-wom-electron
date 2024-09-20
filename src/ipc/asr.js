@@ -8,18 +8,25 @@ const portAudio = require('naudiodon2');
 import icon from '../../resources/icon.png?asset'
 import logger from '../utils/logger';
 import { app } from 'electron';
+import fs from 'fs/promises';
 
+let replacementRules = {};
 export function setupASR(win) {
   logger.info('开始设置 ASR');
   let lyricsWindow
   let asrProcess = new ChildProcessManager(path.join(__dirname, '../../child_process/asr_process/asr_process.js'))
   
+
   asrProcess.on('message', (message) => {
     logger.debug('收到 ASR 进程消息', { message });
-    clipboard.writeText(message);
-    win.webContents.send('asr-message', message);
+    
+    // 应用替换规则
+    let processedMessage = applyReplacementRules(message);
+    
+    clipboard.writeText(processedMessage);
+    win.webContents.send('asr-message', processedMessage);
     if (lyricsWindow) {
-      lyricsWindow.webContents.send('asr-message', message);
+      lyricsWindow.webContents.send('asr-message', processedMessage);
     }
   });
   
@@ -28,9 +35,20 @@ export function setupASR(win) {
     logger.info('ASR 进程退出');
   });
 
-  ipcMain.handle('start-asr', (_, data) => {
+  ipcMain.handle('start-asr', async (_, data) => {
     logger.info('收到启动 ASR 请求', { data });
     if (!asrProcess.exist()) {
+      // 读取替换规则文件
+      if (data.modelDir) {
+        try {
+          const ruleContent = await fs.readFile(path.join(data.modelDir, 'rules.json'), 'utf-8');
+          replacementRules = JSON.parse(ruleContent);
+          logger.debug('成功读取替换规则', { rules: replacementRules });
+        } catch (error) {
+          logger.error('读取替换规则文件失败', { error });
+        }
+      }
+
       asrProcess.start()
       asrProcess.send({...data, logPath: join(app.getPath('userData'), 'logs')});
       logger.debug('ASR 进程已启动并发送数据');
@@ -129,4 +147,12 @@ export function setupASR(win) {
   });
 
   logger.info('ASR 设置完成');
+}
+
+function applyReplacementRules(message) {
+  let processedMessage = message;
+  for (const [key, value] of Object.entries(replacementRules)) {
+    processedMessage = processedMessage.replace(new RegExp(key, 'g'), value);
+  }
+  return processedMessage;
 }

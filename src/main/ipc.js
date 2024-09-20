@@ -33,6 +33,9 @@ export function setupIPC(win, store) {
   ipcMain.handle('send-msg-to-game', (event, message) => {
     sender.send({ sendClipboard2Game: true, data: message })
   })
+  ipcMain.handle('send-msg-to-game-all', (event, message) => {
+    sender.send({ sendClipboard2GameAll: true, data: message })
+  })
   ipcMain.handle('init_lcu', () => init_lcu(win));
   ipcMain.handle('current-summoner', getCurrentSummoner);
   ipcMain.handle('get-client-url', getClientUrl);
@@ -58,15 +61,17 @@ export function setupIPC(win, store) {
     });
     newWindow.loadURL(tool.url);
   });
-  ipcMain.handle('exec-cmd', (event, cmd) => {
-    exec(cmd, (error, stdout, stderr) => {
+  ipcMain.handle('shutdown-computer', () => {
+    // 关电脑
+    // 赢一把就睡觉功能，不管输赢检测到打完一把游戏直接关机！
+    exec('shutdown -s -t 0', (error, stdout, stderr) => {
       if (error) {
         console.error(`执行命令时发生错误: ${error.message}`);
         return;
       }
       console.log(`命令输出: ${stdout}`);
     });
-  });
+  })
   setupASR(win)
   setupASRModelManager(win)
   setupShortcut(win, sender)

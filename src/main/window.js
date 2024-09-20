@@ -46,24 +46,25 @@ export function createWindow() {
     mainWindow.loadURL("https://kaihei.online/lol-wom-helper")
   } else {
     const defaultUrl = "https://kaihei.online/lol-wom-helper";
-    const checkUrlAvailability = async (url) => {
-      try {
-        const response = await fetch(url, { method: 'HEAD' });
-        return response.ok;
-      } catch (error) {
-        return false;
-      }
-    };
+    mainWindow.loadURL(defaultUrl);
+    // const checkUrlAvailability = async (url) => {
+    //   try {
+    //     const response = await fetch(url, { method: 'HEAD' });
+    //     return response.ok;
+    //   } catch (error) {
+    //     return false;
+    //   }
+    // };
 
-    const loadUrlOrDefault = async () => {
-      const isAvailable = await checkUrlAvailability(defaultUrl);
-      if (isAvailable) {
-        mainWindow.loadURL(defaultUrl);
-      } else {
-        mainWindow.loadFile(defaultPage);
-      }
-    };
-    loadUrlOrDefault();
+    // const loadUrlOrDefault = async () => {
+    //   const isAvailable = await checkUrlAvailability(defaultUrl);
+    //   if (isAvailable) {
+    //     mainWindow.loadURL(defaultUrl);
+    //   } else {
+    //     mainWindow.loadFile(defaultPage);
+    //   }
+    // };
+    // loadUrlOrDefault();
   }
   // let lastPosition = { x: 0, y: 0 }
 

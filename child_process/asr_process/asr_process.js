@@ -31,6 +31,7 @@ function createRecognizer(message) {
   logger.info('开始创建识别器', { message });
   const config = get_config(message);
   logger.debug('识别器配置', { config });
+  console.log({config})
   const recognizer = new sherpa_onnx.OfflineRecognizer(config);
   logger.info('识别器创建完成');
   return recognizer;

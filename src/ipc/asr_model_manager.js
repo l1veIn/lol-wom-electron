@@ -6,7 +6,7 @@ const fs = require('fs');
 const path = require('path');
 const tar = require('tar');
 const bzip2 = require('unbzip2-stream');
-const { ipcMain, dialog } = require('electron');
+const { ipcMain, dialog, shell } = require('electron');
 
 export function setupASRModelManager(win) {
     logger.info('开始设置 ASR 模型管理器');
@@ -19,6 +19,21 @@ export function setupASRModelManager(win) {
         logger.info('用户选择的目录', { path: result.filePaths[0] });
         return result.filePaths[0];
     });
+    ipcMain.handle('select-file', async () => {
+        logger.debug('收到选择文件请求');
+        // 只能选择json文件
+        const result = await dialog.showOpenDialog({
+            properties: ['openFile'],
+            filters: [{ name: 'JSON', extensions: ['json'] }]
+        });
+        logger.info('用户选择的文件', { path: result.filePaths[0] });
+        return result.filePaths[0];
+    });
+
+    ipcMain.handle('open-model-dir', (event, modelDir) => {
+        logger.debug('打开模型目录', { modelDir });
+        shell.openPath(modelDir);
+    });
 
     ipcMain.handle('check-model-existence', (event, { modelDir, modelName }) => {
         logger.debug('检查模型是否存在', { modelDir, modelName });
@@ -27,7 +42,29 @@ export function setupASRModelManager(win) {
         logger.info('模型存在性检查结果', { dirExists, tarExists });
         return { dir: dirExists, tar: tarExists };
     });
+    ipcMain.handle('check-rule-file', (event, modelDir) => {
+        logger.debug('检查规则文件是否存在', { modelDir });
+        const rulePath = path.join(modelDir, 'rules.json');
+        const fileExists = fs.existsSync(rulePath);
 
+        if (!fileExists) {
+            logger.info('规则文件不存在，正在创建默认文件');
+            try {
+                fs.writeFileSync(rulePath, JSON.stringify({
+                    "我操": "我超",
+                    "牛逼": "NB"
+                }, null, 2));
+                logger.info('默认规则文件创建成功');
+                return true;
+            } catch (error) {
+                logger.error('创建默认规则文件失败', { error });
+                return false;
+            }
+        }
+
+        logger.info('规则文件存在性检查结果', { fileExists });
+        return fileExists;
+    });
     ipcMain.handle('start-download', async (event, { url, destination, modelName, modelDir }) => {
         logger.info('开始下载模型', { url, destination, modelName });
         try {

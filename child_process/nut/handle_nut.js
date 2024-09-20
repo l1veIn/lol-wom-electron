@@ -43,6 +43,7 @@ async function register(message) {
         runner: runner,
         isRunning: false,
         listener: async (keypress, down) => {
+            // console.log('keypress', keypress.name);
             if (!getCondition(keypress, message, down)) {
                 return
             }

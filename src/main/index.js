@@ -5,6 +5,9 @@ import { electronApp, optimizer } from '@electron-toolkit/utils'
 import logger from '../utils/logger.js';
 
 import { createWindow } from './window';
+// app.commandLine.appendSwitch("--in-process-gpu");
+
+
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
