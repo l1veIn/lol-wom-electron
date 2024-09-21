@@ -1,4 +1,4 @@
-import { authenticate, createWebSocketConnection, createHttp1Request ,LeagueClient } from 'league-connect';
+import { authenticate, createWebSocketConnection, createHttp1Request, LeagueClient } from 'league-connect';
 import logger from '../utils/logger';
 
 export let credentials = null;
