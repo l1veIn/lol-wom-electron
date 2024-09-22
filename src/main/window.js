@@ -13,7 +13,7 @@ export function createWindow() {
     height: 800,
     maximizable: false,
     autoHideMenuBar: true,
-    resizable: false,
+    resizable: true,
     titleBarStyle: 'hidden',
     titleBarOverlay: {
       color: 'rgba(0,0,0,0)',
@@ -29,6 +29,12 @@ export function createWindow() {
       sandbox: false
     }
   })
+
+  // 设置最小尺寸
+  mainWindow.setMinimumSize(400, 800)
+
+  // 设置最大尺寸
+  mainWindow.setMaximumSize(800, 1600)
 
   setupIPC(mainWindow);
   mainWindow.on('ready-to-show', () => {

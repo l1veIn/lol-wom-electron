@@ -20,7 +20,7 @@ function get_config(message) {
                         'useInverseTextNormalization': 1,
                     },
                     'tokens': join(message.modelDir, message.model, 'tokens.txt'),
-                    'numThreads': 2,
+                    'numThreads': message.cpu_numThreads || 2,
                     'provider': 'cpu',
                     'debug': 1,
                 }
@@ -41,7 +41,7 @@ function get_config(message) {
                         'decoder': join(message.modelDir, message.model, `${modelSize}-decoder.onnx`),
                     },
                     'tokens': join(message.modelDir, message.model, `${modelSize}-tokens.txt`),
-                    'numThreads': 2,
+                    'numThreads': message.cpu_numThreads || 2,
                     'provider': 'cpu',
                     'debug': 1,
                 }
@@ -59,7 +59,7 @@ function get_config(message) {
                         'decoder': join(message.modelDir, message.model, `${modelSize}-decoder.int8.onnx`),
                     },
                     'tokens': join(message.modelDir, message.model, `${modelSize}-tokens.txt`),
-                    'numThreads': 2,
+                    'numThreads': message.cpu_numThreads || 2,
                     'provider': 'cpu',
                     'debug': 1,
                 }
@@ -81,7 +81,7 @@ function get_config(message) {
                             join(message.modelDir, message.model, 'joiner-epoch-20-avg-1.int8.onnx'),
                     },
                     'tokens': join(message.modelDir, message.model, 'tokens.txt'),
-                    'numThreads': 2,
+                    'numThreads': message.cpu_numThreads || 2,
                     'provider': 'cpu',
                     'debug': 1,
                 }
@@ -102,7 +102,7 @@ function get_config(message) {
                             join(message.modelDir, message.model, 'joiner-epoch-45-avg-35.int8.onnx'),
                     },
                     'tokens': join(message.modelDir, message.model, 'tokens.txt'),
-                    'numThreads': 2,
+                    'numThreads': message.cpu_numThreads || 2,
                     'provider': 'cpu',
                     'debug': 1,
                 }
@@ -119,7 +119,7 @@ function get_config(message) {
                         'model': join(message.modelDir, message.model, 'model.int8.onnx'),
                     },
                     'tokens': join(message.modelDir, message.model, 'tokens.txt'),
-                    'numThreads': 2,
+                    'numThreads': message.cpu_numThreads || 2,
                     'provider': 'cpu',
                     'debug': 1,
                 }

@@ -1,9 +1,9 @@
 import { authenticate, createWebSocketConnection, createHttp1Request, LeagueClient } from 'league-connect';
 import logger from '../utils/logger';
 
-export let credentials = null;
-
 import _ from 'lodash'
+let credentials = null;
+
 
 export async function init_lcu(win) {
 	logger.info('init_lcu 开始初始化');
@@ -13,7 +13,7 @@ export async function init_lcu(win) {
 	}
 	try {
 		credentials = await authenticate()
-		logger.debug('LCU 认证成功', { credentials });
+		logger.info('LCU 认证成功', { credentials });
 
 		const ws = await createWebSocketConnection({
 			authenticationOptions: {
@@ -25,7 +25,7 @@ export async function init_lcu(win) {
 		logger.info('WebSocket 连接已创建');
 
 		ws.subscribe('/lol-gameflow/v1/gameflow-phase', (data, event) => {
-			logger.debug('游戏阶段变化', { data });
+			logger.info('游戏阶段变化', { data });
 			win.webContents.send('game-phase-change', data);
 		})
 
@@ -56,14 +56,14 @@ export async function getClientUrl() {
 }
 
 export async function get(_, url, body) {
-	logger.debug('发送 GET 请求', { url, body });
+	logger.info('发送 GET 请求', { url, body });
 	try {
 		const response = await createHttp1Request({
 			method: 'GET',
 			url,
 			body
 		}, credentials)
-		logger.debug('GET 请求成功', { url });
+		logger.info('GET 请求成功', { url });
 		return response.json()
 	} catch (error) {
 		logger.error('GET 请求失败', { url, error });
@@ -72,14 +72,14 @@ export async function get(_, url, body) {
 }
 
 export async function post(_, url, body) {
-	logger.debug('发送 POST 请求', { url, body });
+	logger.info('发送 POST 请求', { url, body });
 	try {
 		const response = await createHttp1Request({
 			method: 'POST',
 			url,
 			body
 		}, credentials)
-		logger.debug('POST 请求成功', { url });
+		logger.info('POST 请求成功', { url });
 		return response.json()
 	} catch (error) {
 		logger.error('POST 请求失败', { url, error });
@@ -88,15 +88,16 @@ export async function post(_, url, body) {
 }
 
 export async function getCurrentSummoner() {
-	logger.debug('获取当前召唤师信息');
+	logger.info('获取当前召唤师信息');
 	try {
 		let res = await get(null, '/lol-summoner/v1/current-summoner')
 		res.rsoPlatformId = credentials.rsoPlatformId
 		res.region = credentials.region
-		logger.debug('成功获取召唤师信息', { summoner: res });
+		logger.info('成功获取召唤师信息', { summoner: res });
 		return res
 	} catch (error) {
 		logger.error('获取召唤师信息失败', { error });
 		throw error;
 	}
 }
+

@@ -18,7 +18,7 @@ export function setupASR(win) {
   
 
   asrProcess.on('message', (message) => {
-    logger.debug('收到 ASR 进程消息', { message });
+    logger.info('收到 ASR 进程消息', { message });
     
     // 应用替换规则
     let processedMessage = applyReplacementRules(message);
@@ -43,7 +43,7 @@ export function setupASR(win) {
         try {
           const ruleContent = await fs.readFile(path.join(data.modelDir, 'rules.json'), 'utf-8');
           replacementRules = JSON.parse(ruleContent);
-          logger.debug('成功读取替换规则', { rules: replacementRules });
+          logger.info('成功读取替换规则', { rules: replacementRules });
         } catch (error) {
           logger.error('读取替换规则文件失败', { error });
         }
@@ -51,7 +51,7 @@ export function setupASR(win) {
 
       asrProcess.start()
       asrProcess.send({...data, logPath: join(app.getPath('userData'), 'logs')});
-      logger.debug('ASR 进程已启动并发送数据');
+      logger.info('ASR 进程已启动并发送数据');
       return true;
     } else {
       logger.warn('ASR 进程已存在，无法启动新进程');
@@ -63,7 +63,7 @@ export function setupASR(win) {
     logger.info('收到停止 ASR 请求');
     if (asrProcess) {
       asrProcess.send('stop-asr');
-      logger.debug('已发送停止 ASR 命令');
+      logger.info('已发送停止 ASR 命令');
     } else {
       logger.warn('ASR 进程不存在，无法停止');
     }
@@ -71,13 +71,13 @@ export function setupASR(win) {
 
   ipcMain.handle('get-asr-status', () => {
     const status = asrProcess.exist();
-    logger.debug('获取 ASR 状态', { status });
+    logger.info('获取 ASR 状态', { status });
     return status;
   });
 
   ipcMain.handle('get-asr-devices', () => {
     const devices = portAudio.getDevices();
-    logger.debug('获取 ASR 设备列表', { deviceCount: devices.length });
+    logger.info('获取 ASR 设备列表', { deviceCount: devices.length });
     return devices;
   });
 
@@ -110,16 +110,16 @@ export function setupASR(win) {
       lyricsWindow.setAlwaysOnTop(true, 'screen-saver')
       lyricsWindow.on('ready-to-show', () => {
         lyricsWindow.show()
-        logger.debug('歌词窗口已显示');
+        logger.info('歌词窗口已显示');
       })
       lyricsWindow.on('closed', () => {
         lyricsWindow = null
-        logger.debug('歌词窗口已关闭');
+        logger.info('歌词窗口已关闭');
       })
       logger.info('歌词窗口已创建');
     } else {
       lyricsWindow.show()
-      logger.debug('已有歌词窗口，显示现有窗口');
+      logger.info('已有歌词窗口，显示现有窗口');
     }
   });
 
@@ -128,7 +128,7 @@ export function setupASR(win) {
     if(lyricsWindow){
       try {
         lyricsWindow.hide()
-        logger.debug('歌词窗口已隐藏');
+        logger.info('歌词窗口已隐藏');
       } catch (error) {
         logger.error('关闭歌词窗口时出错', { error });
       }
@@ -138,7 +138,7 @@ export function setupASR(win) {
   });
 
   ipcMain.handle('set-ignore-mouse-events', (event, ignore, options) => {
-    logger.debug('设置忽略鼠标事件', { ignore, options });
+    logger.info('设置忽略鼠标事件', { ignore, options });
     if (lyricsWindow) {
       lyricsWindow.setIgnoreMouseEvents(ignore, options);
     } else {

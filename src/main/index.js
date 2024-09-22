@@ -5,7 +5,7 @@ import { electronApp, optimizer } from '@electron-toolkit/utils'
 import logger from '../utils/logger.js';
 
 import { createWindow } from './window';
-// app.commandLine.appendSwitch("--in-process-gpu");
+app.commandLine.appendSwitch("--in-process-gpu");
 
 
 
