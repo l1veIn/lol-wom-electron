@@ -1,6 +1,6 @@
 {
   "name": "lol_wom_helper",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "LOL互动助手",
   "main": "./out/main/index.js",
   "author": "kaihei.online",
@@ -21,6 +21,7 @@
     "@electron-toolkit/preload": "^3.0.1",
     "@electron-toolkit/utils": "^3.0.0",
     "@nut-tree-fork/nut-js": "^4.2.2",
+    "ahocorasick": "^1.0.2",
     "electron-dl": "^4.0.0",
     "electron-localshortcut": "^3.2.1",
     "electron-store": "^10.0.0",
@@ -34,6 +35,7 @@
     "rimraf": "^6.0.1",
     "robotjs": "^0.6.0",
     "sherpa-onnx-node": "^1.10.20",
+    "simplebig": "^0.0.3",
     "tar": "^7.4.3",
     "unbzip2-stream": "^1.4.3",
     "winston": "^3.13.1"

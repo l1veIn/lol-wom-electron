@@ -1,10 +1,12 @@
 const portAudio = require('naudiodon2');
-const { join , basename} = require('path');
+const { join, basename } = require('path');
 const sherpa_onnx = require('sherpa-onnx-node');
 const get_config = require('./get_config');
 const fs = require('fs');
-
+const S = require("simplebig");
 // const logger = require('../../src/utils/logger');
+const { censor } = require('./censor');
+
 
 const winston = require('winston');
 let logger = null;
@@ -51,8 +53,8 @@ function createSpeakerEmbeddingExtractor() {
 
 function computeEmbedding(extractor, filename) {
   const stream = extractor.createStream();
-  const wave = sherpa_onnx.readWave(filename,enableExternalBuffer = false);
-  stream.acceptWaveform({sampleRate: wave.sampleRate, samples: wave.samples});
+  const wave = sherpa_onnx.readWave(filename, enableExternalBuffer = false);
+  stream.acceptWaveform({ sampleRate: wave.sampleRate, samples: wave.samples });
   return extractor.compute(stream);
 }
 
@@ -142,7 +144,7 @@ function setupASR(message) {
     if (message.speaker_sound_path) {
       // TODO: 实现从路径批量计算说话人语音向量并添加
       // logger.info('需要实现从指定路径加载预设说话人音频');
-      addSpeakers(message.speaker_sound_path,extractor,manager)
+      addSpeakers(message.speaker_sound_path, extractor, manager)
     }
   }
   let index = 0;
@@ -176,7 +178,7 @@ function setupASR(message) {
           sampleRate: recognizer.config.featConfig.sampleRate
         });
         const embedding = extractor.compute(stream2);
-        
+
         let speakerNum = manager.getNumSpeakers();
         if (speakerNum === 0 && message.use_auto_speaker_diarization) {
           currentSpeaker = "说话人1";
@@ -202,10 +204,16 @@ function setupASR(message) {
       const r = recognizer.getResult(stream);
       if (r.text.length > 0) {
         let text = r.text.toLowerCase().trim();
+        if (message.use_censor_words) {
+          text = censor(text)
+        }
+        if (message.use_simplified_chinese_to_traditional) {
+          text = S.s2t(text)
+        }
         if (message.use_speaker_diarization) {
-          process.send(currentSpeaker + ': ' + text);
+          process.send({ text: text, speaker: currentSpeaker });
         } else {
-          process.send(text);
+          process.send({ text: text });
         }
         logger.info('识别结果', { index, text, currentSpeaker });
         index += 1;

@@ -8,13 +8,13 @@
       </view>
     </view>
     <view class="flex-sub flex flex-direction lyricsBox" :class="{ 'dragable': !lock }">
-      <view class="text-gray long-modelName" :style="{ fontSize: fontSize * previous_lyrics_size_rate + 'px' }"
+      <view class="text-gray long-modelName" :style="{ fontSize: previous_lyrics_size + 'px' }"
         v-for="lyrics in previous_lyrics">
-        {{ lyrics }}
+        <text v-if="lyrics.speaker">{{ lyrics.speaker }}:</text> {{ lyrics.text }}
       </view>
-      <view class="flex-sub" :class="getVisualLength(current_lyrics) > 42 ? 'text-xl' : 'text-xxl'"
-        :style="{ fontSize: fontSize + 'px' }">
-        <view>{{ current_lyrics || '等待中...' }}</view>
+      <view class="flex-sub"
+        :style="{ fontSize: getVisualLength(current_lyrics.text) > 42 ? fontSize * 0.8 + 'px' : fontSize + 'px' }">
+        <view> <text v-if="current_lyrics.speaker">{{ current_lyrics.speaker }}:</text> {{ current_lyrics.text || '等待中...' }}</view>
       </view>
     </view>
   </view>
@@ -33,16 +33,17 @@ export default {
       isOverButton: false,
       lastStateChangeTime: 0,
       last_lyrics: '',
-      current_lyrics: '',
+      current_lyrics: {text: '', speaker: ''},
       previous_lyrics: [],
       opacity: 0.4,
       fontSize: 24,
       maxPreviousLines: 1,
-      previous_lyrics_size_rate: 0.8,
+      previous_lyrics_size: 19,
     }
   },
   mounted() {
     LCU.on('asr-message', this.handleMsg)
+    LCU.on('config', this.setConfig)
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'visible') {
         this.lock = false
@@ -65,9 +66,10 @@ export default {
     },
     handleMsg(msg) {
       console.log(msg)
-      if (msg != 'ASR-started') {
+      let text = msg.text || ''
+      if (text != 'ASR-started') {
         this.previous_lyrics.push(this.current_lyrics)
-        if (this.previous_lyrics.length > this.maxPreviousLines) {
+        while (this.previous_lyrics.length > this.maxPreviousLines) {
           this.previous_lyrics.shift()
         }
         this.current_lyrics = msg
@@ -75,7 +77,7 @@ export default {
     },
     setConfig(config) {
       this.maxPreviousLines = config.maxPreviousLines
-      this.previous_lyrics_size_rate = config.previous_lyrics_size_rate
+      this.previous_lyrics_size = config.previous_lyrics_size
       this.fontSize = config.fontSize
       this.opacity = config.opacity
     },

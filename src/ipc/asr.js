@@ -15,21 +15,22 @@ export function setupASR(win) {
   logger.info('开始设置 ASR');
   let lyricsWindow
   let asrProcess = new ChildProcessManager(path.join(__dirname, '../../child_process/asr_process/asr_process.js'))
-  
+
 
   asrProcess.on('message', (message) => {
     logger.info('收到 ASR 进程消息', { message });
-    
+    let text = message.text || message
+    let speaker = message.speaker || ''
     // 应用替换规则
-    let processedMessage = applyReplacementRules(message);
-    
+    let processedMessage = applyReplacementRules(text);
+
     clipboard.writeText(processedMessage);
-    win.webContents.send('asr-message', processedMessage);
+    win.webContents.send('asr-message', {text: processedMessage, speaker: speaker});
     if (lyricsWindow) {
-      lyricsWindow.webContents.send('asr-message', processedMessage);
+      lyricsWindow.webContents.send('asr-message', {text: processedMessage, speaker: speaker});
     }
   });
-  
+
   asrProcess.on('exit', () => {
     asrProcess.stop();
     logger.info('ASR 进程退出');
@@ -50,7 +51,7 @@ export function setupASR(win) {
       }
 
       asrProcess.start()
-      asrProcess.send({...data, logPath: join(app.getPath('userData'), 'logs')});
+      asrProcess.send({ ...data, logPath: join(app.getPath('userData'), 'logs') });
       logger.info('ASR 进程已启动并发送数据');
       return true;
     } else {
@@ -81,10 +82,10 @@ export function setupASR(win) {
     return devices;
   });
 
-  ipcMain.handle('open-lyric-window', () => {
-    logger.info('收到打开歌词窗口请求');
+  ipcMain.handle('open-lyric-window', (_, config) => {
+    logger.info('收到打开歌词窗口请求', { config });
     const { width, height } = screen.getPrimaryDisplay().workAreaSize;
-    if(!lyricsWindow){
+    if (!lyricsWindow) {
       lyricsWindow = new BrowserWindow({
         width: 500,
         height: 100,
@@ -99,7 +100,7 @@ export function setupASR(win) {
           nodeIntegration: true,
           contextIsolation: false
         }
-      }) 
+      })
       lyricsWindow.setIgnoreMouseEvents(false);
       lyricsWindow.setBackgroundColor("rgba(0, 0, 0, 0)")
       if (is.dev) {
@@ -109,6 +110,7 @@ export function setupASR(win) {
       }
       lyricsWindow.setAlwaysOnTop(true, 'screen-saver')
       lyricsWindow.on('ready-to-show', () => {
+        lyricsWindow.webContents.send('config', config);
         lyricsWindow.show()
         logger.info('歌词窗口已显示');
       })
@@ -118,6 +120,7 @@ export function setupASR(win) {
       })
       logger.info('歌词窗口已创建');
     } else {
+      lyricsWindow.webContents.send('config', config);
       lyricsWindow.show()
       logger.info('已有歌词窗口，显示现有窗口');
     }
@@ -125,7 +128,7 @@ export function setupASR(win) {
 
   ipcMain.handle('close-lyric-window', () => {
     logger.info('收到关闭歌词窗口请求');
-    if(lyricsWindow){
+    if (lyricsWindow) {
       try {
         lyricsWindow.hide()
         logger.info('歌词窗口已隐藏');
