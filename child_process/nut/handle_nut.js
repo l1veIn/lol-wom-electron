@@ -13,7 +13,7 @@ const v = new GlobalKeyboardListener();
 function getCondition(keypress, message, down) {
     let keyArr = message.key.split('+');
     if (keyArr.length == 1) {
-        return keypress.name === message.key && keypress.state == "DOWN"
+        return keypress.name === message.key && keypress.state == "UP"
     } else {
         return keypress.state == "DOWN" && keypress.name == keyArr[1] && (down[keyArr[0]])
     }
@@ -24,16 +24,19 @@ function input(message) {
 }
 
 async function register(message) {
+    console.log('register', message);
     let runner;
     // 处理几个特殊键，直接执行
     if (message.key == 'PAGE UP') {
-        runner = async () => { process.send({onPageUp:true}) };
+        runner = async () => { process.send({ onPageUp: true }) };
     } else if (message.key == 'PAGE DOWN') {
-        runner = async () => { process.send({onPageDown:true}) };
+        runner = async () => { process.send({ onPageDown: true }) };
+    } else if (message.script == 'sendClipboard2Game') {
+        runner = async () => { process.send({ sendClipboard2Game: true, ...message }) };
+    } else if (message.script == 'sendClipboard2GameAll') {
+        runner = async () => { process.send({ sendClipboard2GameAll: true, ...message }) };
     } else if (message.script) {
         runner = require(message.script);
-    } else {
-        runner = async () => { process.send({sendClipboard2Game:true}) };
     }
     if (register_map[message.key]) {
         console.log(`shortcut ${message.key} registed, updating...`);
@@ -44,7 +47,7 @@ async function register(message) {
         isRunning: false,
         listener: async (keypress, down) => {
             // console.log('keypress', keypress.name);
-            if (!getCondition(keypress, message, down)) {
+            if (!getCondition(keypress, message, down)) { 
                 return
             }
             if (!register_map[message.key].isRunning) {
@@ -86,7 +89,7 @@ function stopASR() {
     register_map = {};
 }
 
-process.on('message', async(message) => {
+process.on('message', async (message) => {
     if (message.key) {
         console.log('catch message:', message.key);
         if (message.remove) {

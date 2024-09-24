@@ -1,10 +1,14 @@
 // 参考自 https://github.com/Hanxven/LeagueAkari/tree/main/addons/input
 
 const input = require('./laInputWin32x64')
+const { censor } = require('./censor');
 function sleep(time) {
   return new Promise((resolve) => setTimeout(resolve, time))
 }
-async function sendClipboard2Game(message) {
+async function sendClipboard2Game(message, censor_active) {
+  if (censor_active) {
+    message = censor(message)
+  }
   input.sendKey(13, true)
   input.sendKey(13, false)
   await sleep(65)
@@ -14,7 +18,10 @@ async function sendClipboard2Game(message) {
   input.sendKey(13, true)
   input.sendKey(13, false)
 }
-async function sendClipboard2GameAll(message) {
+async function sendClipboard2GameAll(message, censor_active) {
+  if (censor_active) {
+    message = censor(message)
+  }
   input.sendKey(160, true)
   input.sendKey(13, true)
   input.sendKey(13, false)
@@ -28,11 +35,11 @@ async function sendClipboard2GameAll(message) {
 
 process.on('message', (message) => {
   if (message.sendClipboard2Game) {
-    sendClipboard2Game(message.data)
+    sendClipboard2Game(message.data, message.censor_active)
   } else if (message.sendClipboard2GameAll) {
-    sendClipboard2GameAll(message.data)
+    sendClipboard2GameAll(message.data, message.censor_active)
   }else {
-    input.sendKeysX(message.data)
+    input.sendKeysX(message.data, message.censor_active)
   }
 });
 

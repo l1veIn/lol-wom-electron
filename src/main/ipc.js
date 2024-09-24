@@ -8,6 +8,9 @@ import { setupASR } from '../ipc/asr';
 import { setupASRModelManager } from '../ipc/asr_model_manager';
 import { setupShortcut } from '../ipc/shortcut';
 import { setupNedb } from '../ipc/nedb';
+
+import logger from '../utils/logger';
+
 const path = require('path');
 
 let sender = new ChildProcessManager(path.join(__dirname, '../../child_process/sender/sender.js'))
@@ -60,6 +63,15 @@ export function setupIPC(win, store) {
       }
     });
     newWindow.loadURL(tool.url);
+  });
+  ipcMain.handle('choose-file', async (event, fileType) => {
+    logger.debug('收到选择文件请求');
+    const result = await dialog.showOpenDialog({
+      properties: ['openFile'],
+      filters: [{ name: fileType, extensions: [fileType] }]
+    });
+    logger.info('用户选择的文件', { path: result.filePaths[0] });
+    return result.filePaths[0];
   });
   ipcMain.handle('shutdown-computer', () => {
     // 关电脑

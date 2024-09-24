@@ -5,10 +5,70 @@ const { fork } = require('child_process');
 const path = require('path');
 
 import logger from '../utils/logger';
+import fs from 'fs';
 
 // import Store from 'electron-store';
 // 创建一个新的 Store 实例
 // const store = new Store();
+
+let current_text_path = ''
+let text_line = []
+let text_index = 0
+
+// function getText(text_path) {
+//     if(current_text_path !== text_path){
+//         current_text_path = text_path
+//         text_line = fs.readFileSync(text_path, 'utf8').split('\n')
+//         text_index = 0
+//     }
+//     if(text_index >= text_line.length){
+//         text_index = 0
+//     }
+//     return text_line[text_index++]
+// }
+function getText(text_path) {
+    if(current_text_path !== text_path){
+        current_text_path = text_path
+        const fullText = fs.readFileSync(text_path, 'utf8')
+        text_line = splitChineseTextIntoLines(fullText, 30, 50)
+        text_index = 0
+    }
+    if(text_index >= text_line.length){
+        text_index = 0
+    }
+    return text_line[text_index++]
+}
+
+function splitChineseTextIntoLines(text, minLength, maxLength) {
+    const lines = []
+    let currentLine = ''
+
+    for (const char of text) {
+        if (currentLine.length < maxLength) {
+            currentLine += char
+        } else {
+            lines.push(currentLine)
+            currentLine = char
+        }
+
+        // 如果遇到标点符号且当前行长度已达到最小长度，则换行
+        if (isPunctuation(char) && currentLine.length >= minLength) {
+            lines.push(currentLine)
+            currentLine = ''
+        }
+    }
+
+    if (currentLine) {
+        lines.push(currentLine)
+    }
+
+    return lines
+}
+
+function isPunctuation(char) {
+    const punctuations = `。，、；：？！""''（）《》【】`
+    return punctuations.includes(char)
+}
 
 export function setupShortcut(win, sender) {
     // 存储当前注册的快捷键状态
@@ -18,7 +78,7 @@ export function setupShortcut(win, sender) {
     let shortcutProcess = new ChildProcessManager(path.join(__dirname, '../../child_process/nut/handle_nut.js'))
     shortcutProcess.start()
     logger.info('快捷键子进程已启动');
-    
+
     // 注册默认的快捷键
     currentStatus['PAGE UP'] = '';
     currentStatus['PAGE DOWN'] = '';
@@ -31,8 +91,21 @@ export function setupShortcut(win, sender) {
 
     shortcutProcess.on('message', (message) => {
         logger.debug('收到子进程消息:', message);
-        if (message.sendClipboard2Game) {
-            sender.send({ ...message, data: clipboard.readText() })
+        if (message.sendClipboard2Game || message.sendClipboard2GameAll) {
+            let text = ''
+            if (message.use_text && message.text_path) {
+                text = getText(message.text_path)
+            } else {
+                text = clipboard.readText()
+            }
+            sender.send({ ...message, data: text })
+            // if (message.use_text && message.text_path) {
+            //     let text = getText(message.text_path)
+            //     sender.send({ ...message, data: text, censor_active: message.censor_active })
+            // } else {
+
+            //     sender.send({ ...message, data: clipboard.readText(), censor_active: message.censor_active })
+            // }
         } else if (message.onPageUp) {
             win.webContents.send('press_page_up')
         } else if (message.onPageDown) {
@@ -47,11 +120,12 @@ export function setupShortcut(win, sender) {
         return shortcut in currentStatus;
     });
     // 处理注册快捷键的请求
-    ipcMain.handle('register-shortcut', (event, shortcut, script) => {
+    ipcMain.handle('register-shortcut', (event, shortcut, script, censor_active, use_text, text_path) => {
         try {
             logger.info(`注册快捷键: ${shortcut}`);
-            shortcutProcess.send({ key: shortcut, script: script });
-            currentStatus[shortcut] = script || '';
+            console.log('register-shortcut', shortcut, script);
+            shortcutProcess.send({ key: shortcut, script: script || 'sendClipboard2Game', censor_active, use_text, text_path });
+            currentStatus[shortcut] = script || 'sendClipboard2Game';
             // store.set('currentStatus', currentStatus);
         } catch (error) {
             console.error(`Error registering shortcut: ${shortcut}`, error);

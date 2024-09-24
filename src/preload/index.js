@@ -7,7 +7,7 @@ const api = {
 	test(data){
 		return ipcRenderer.invoke('test',data)
 	},
-	invoke: (channel, data) => ipcRenderer.invoke(channel, data),
+	invoke: (channel, ...args) => ipcRenderer.invoke(channel, ...args),
 	on: (channel, func) => ipcRenderer.on(channel, (event, ...args) => func(...args)),
 	removeListener: (channel, func) => ipcRenderer.removeListener(channel, (event, ...args) => func(...args)),
 	removeAllListeners: (channel) => ipcRenderer.removeAllListeners(channel),
