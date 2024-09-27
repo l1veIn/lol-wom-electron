@@ -104,9 +104,9 @@ export function setupASR(win) {
       lyricsWindow.setIgnoreMouseEvents(false);
       lyricsWindow.setBackgroundColor("rgba(0, 0, 0, 0)")
       if (is.dev) {
-        lyricsWindow.loadURL('http://localhost:5173/')
+        lyricsWindow.loadURL('http://localhost:5173/lyrics')
       } else {
-        lyricsWindow.loadFile(join(__dirname, '../renderer/index.html'))
+        lyricsWindow.loadFile(join(__dirname, '../renderer/index.html/lyrics'))
       }
       lyricsWindow.setAlwaysOnTop(true, 'screen-saver')
       lyricsWindow.on('ready-to-show', () => {

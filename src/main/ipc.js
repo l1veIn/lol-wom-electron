@@ -8,7 +8,7 @@ import { setupASR } from '../ipc/asr';
 import { setupASRModelManager } from '../ipc/asr_model_manager';
 import { setupShortcut } from '../ipc/shortcut';
 import { setupNedb } from '../ipc/nedb';
-
+import { setupOCR } from '../ipc/ocr';
 import logger from '../utils/logger';
 
 const path = require('path');
@@ -88,4 +88,5 @@ export function setupIPC(win, store) {
   setupASRModelManager(win)
   setupShortcut(win, sender)
   setupNedb()
+  setupOCR(win)
 }
