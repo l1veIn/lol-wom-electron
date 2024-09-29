@@ -1,0 +1,54 @@
+./RapidOCR-json.exe --image=test.png
+
+
+./RapidOCR-json.exe --models=models --det=ch_PP-OCRv4_det_infer.onnx --cls=ch_ppocr_mobile_v2.0_cls_infer.onnx --rec=ch_PP-OCRv4_rec_infer.onnx  --keys=ppocr_keys_v1.txt --padding=50 --maxSideLen=1024 --boxScoreThresh=0.5 --boxThresh=0.3 --unClipRatio=1.6 --doAngle=1 --mostAngle=1
+
+./RapidOCR-json.exe --models=models --det=ch_PP-OCRv4_det_infer.onnx --cls=ch_ppocr_mobile_v2.0_cls_infer.onnx --rec=ch_PP-OCRv4_rec_infer.onnx  --keys=ppocr_keys_v1.txt --image=test.png
+
+
+./RapidOCR-json.exe --rec=rec_japan_PP-OCRv3_infer.onnx --keys=dict_japan.txt --image=test.png
+
+
+
+
+简体中文(V4)
+ch_PP-OCRv4_det_infer.onnx
+ch_ppocr_mobile_v2.0_cls_infer.onnx
+rec_ch_PP-OCRv4_infer.onnx
+dict_chinese.txt
+
+简体中文(V3)
+ch_PP-OCRv3_det_infer.onnx
+ch_ppocr_mobile_v2.0_cls_infer.onnx
+ch_PP-OCRv3_rec_infer.onnx
+dict_chinese.txt
+
+English
+ch_PP-OCRv3_det_infer.onnx
+ch_ppocr_mobile_v2.0_cls_infer.onnx
+rec_en_PP-OCRv3_infer.onnx
+dict_chinese.txt
+
+繁體中文
+ch_PP-OCRv3_det_infer.onnx
+ch_ppocr_mobile_v2.0_cls_infer.onnx
+rec_chinese_cht_PP-OCRv3_infer.onnx
+dict_chinese_cht.txt
+
+日本語
+ch_PP-OCRv3_det_infer.onnx
+ch_ppocr_mobile_v2.0_cls_infer.onnx
+rec_japan_PP-OCRv3_infer.onnx
+dict_japan.txt
+
+한국어
+ch_PP-OCRv3_det_infer.onnx
+ch_ppocr_mobile_v2.0_cls_infer.onnx
+rec_korean_PP-OCRv3_infer.onnx
+dict_korean.txt
+
+Русский
+ch_PP-OCRv3_det_infer.onnx
+ch_ppocr_mobile_v2.0_cls_infer.onnx
+rec_cyrillic_PP-OCRv3_infer.onnx
+dict_cyrillic.txt

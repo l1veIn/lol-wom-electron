@@ -1,16 +1,17 @@
 <!doctype html>
 <html>
-  <head>
-    <meta charset="UTF-8" />
-    <title>语音转录字幕</title>
-    <meta
-      http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:"
-    />
-  </head>
 
-  <body style="margin:0">
-    <div id="app"></div>
-    <script type="module" src="/src/main.js"></script>
-  </body>
+<head>
+  <meta charset="UTF-8" />
+  <title>语音转录字幕</title>
+  <meta http-equiv="Content-Security-Policy" content="default-src *;
+   img-src * 'self' data: https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' *;
+   style-src  'self' 'unsafe-inline' *">
+</head>
+
+<body style="margin:0">
+  <div id="app"></div>
+  <script type="module" src="/src/main.js"></script>
+</body>
+
 </html>

@@ -12,7 +12,7 @@ parentPort.on('message', async ({ oldImage, newImage, threshold }) => {
     const { data: newData, info: newInfo } = newBuffer;
 
     if (oldInfo.width !== newInfo.width || oldInfo.height !== newInfo.height) {
-      throw new Error('图像尺寸不匹配');
+      parentPort.postMessage(true);
     }
 
     let changedPixels = 0;
