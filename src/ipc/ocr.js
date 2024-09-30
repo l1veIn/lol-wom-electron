@@ -1,249 +1,49 @@
-const { ipcMain, clipboard, BrowserWindow, screen, desktopCapturer } = require('electron');
+const { ipcMain, BrowserWindow, screen, desktopCapturer } = require('electron');
 const { spawn } = require('child_process');
-import { join } from 'path'
+const { join } = require('path');
 const path = require('path');
-import icon from '../../resources/icon.png?asset'
-import logger from '../utils/logger';
 const sharp = require('sharp');
-import { app } from 'electron';
-import fs from 'fs/promises';
-const { Worker } = require('worker_threads');
+const { app } = require('electron');
 
-async function removeBlackOverlay(inputPath, outputPath) {
-    try {
-        // 读取图像
-        const image = sharp(inputPath);
+import icon from '../../resources/icon.png?asset';
+import logger from '../utils/logger';
+import { removeBlackOverlayAndWhiteText, getImageDiff } from '../utils/imageProcessing';
 
-        // 获取图像元数据
-        const metadata = await image.metadata();
-
-        // 提取图像通道
-        const { data, info } = await image
-            .raw()
-            .toBuffer({ resolveWithObject: true });
-
-        // 创建一个新的 Buffer 来存储处理后的图像数据
-        const outputBuffer = Buffer.alloc(data.length);
-
-        // 处理每个像素
-        for (let i = 0; i < data.length; i += info.channels) {
-            for (let c = 0; c < info.channels; c++) {
-                // 应用逆转公式：(遮罩后的像素值 - 0.1 * 黑色值) / 0.1
-                let originalValue = (data[i + c] - 0.1 * 0) / 0.1;
-                // 确保值在 0-255 范围内
-                originalValue = Math.max(0, Math.min(255, originalValue));
-                outputBuffer[i + c] = Math.round(originalValue);
-            }
-        }
-
-        // 创建新的图像
-        await sharp(outputBuffer, {
-            raw: {
-                width: info.width,
-                height: info.height,
-                channels: info.channels
-            }
-        })
-            .toFile(outputPath);
-
-        console.log('图像处理完成');
-    } catch (error) {
-        console.error('处理图像时发生错误:', error);
+class OCRService {
+    constructor() {
+        this.working = false;
+        this.ocr_processing = false;
+        this.screenSize = screen.getPrimaryDisplay().size;
+        this.ocrWindow = null;
+        this.ocrEngine = null;
+        this.monitorRegion = { x: 0, y: 0, width: 400, height: 300 };
+        this.intervalId = null;
+        this.lastImage = null;
+        this.moving = false;
+        this.screenView = { x: 0, y: 0, width: this.screenSize.width, height: this.screenSize.height };
+        this.setupIPCHandlers();
     }
-}
-async function removeBlackAndWhiteOverlay(inputPath, outputPath) {
-    try {
-        const image = sharp(inputPath);
-        const { data, info } = await image
-            .raw()
-            .toBuffer({ resolveWithObject: true });
-
-        const outputBuffer = Buffer.alloc(data.length);
-
-        for (let i = 0; i < data.length; i += info.channels) {
-            for (let c = 0; c < 3; c++) { // 处理RGB通道
-                let pixelValue = data[i + c];
-
-                // 应用逆转公式：(遮罩后的像素值 - 0.94 * 108.5) / 0.06
-                pixelValue = (pixelValue - 0.94 * 108.5) / 0.06;
-
-                pixelValue = Math.max(0, Math.min(255, pixelValue));
-                outputBuffer[i + c] = Math.round(pixelValue);
-            }
-
-            // 如果有alpha通道，保持不变
-            if (info.channels === 4) {
-                outputBuffer[i + 3] = data[i + 3];
-            }
-        }
-
-        await sharp(outputBuffer, {
-            raw: {
-                width: info.width,
-                height: info.height,
-                channels: info.channels
-            }
-        })
-            .toFile(outputPath);
-
-        console.log('图像处理完成');
-    } catch (error) {
-        console.error('处理图像时发生错误:', error);
+    async sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
     }
-}
-async function removeBlackOverlayAndWhiteText(inputPath, outputPath) {
-    try {
-        const image = sharp(inputPath);
-        const { data, info } = await image
-            .raw()
-            .toBuffer({ resolveWithObject: true });
 
-        const outputBuffer = Buffer.alloc(data.length);
-
-        for (let i = 0; i < data.length; i += info.channels) {
-            let isTextArea = true;
-            for (let c = 0; c < 3; c++) {
-                if (Math.abs(data[i + c] - 108) > 10) {
-                    isTextArea = false;
-                    break;
-                }
-            }
-
-            for (let c = 0; c < 3; c++) {
-                let pixelValue = data[i + c];
-
-                if (isTextArea) {
-                    // 文字区域：去除rgba(108, 108, 108, 0.94)遮罩
-                    pixelValue = (pixelValue - 0.94 * 108) / 0.06;
-                } else {
-                    // 背景区域：去除rgba(0, 0, 0, 0.9)遮罩
-                    pixelValue = (pixelValue - 0.9 * 0) / 0.1;
-                }
-
-                pixelValue = Math.max(0, Math.min(255, pixelValue));
-                outputBuffer[i + c] = Math.round(pixelValue);
-            }
-
-            // 保持alpha通道不变
-            if (info.channels === 4) {
-                outputBuffer[i + 3] = data[i + 3];
-            }
-        }
-
-        await sharp(outputBuffer, {
-            raw: {
-                width: info.width,
-                height: info.height,
-                channels: info.channels
-            }
-        })
-            .toFile(outputPath);
-
-        console.log('图像处理完成');
-    } catch (error) {
-        console.error('处理图像时发生错误:', error);
+    setupIPCHandlers() {
+        ipcMain.handle('start-ocr', this.handleStartOCR.bind(this));
+        ipcMain.handle('close-ocr-window', this.handleCloseOCRWindow.bind(this));
+        ipcMain.handle('ocr-window-fixed', this.handleOCRWindowFixed.bind(this));
     }
-}
-export function setupOCR(win) {
-    logger.info('开始设置 OCR');
-    let ocrWindow;
-    let lastImage;
-    let worker;
-    let intervalId;
-    let ocrEngine;
-    let monitorRegion = { x: 0, y: 0, width: 400, height: 300 };
-    function stopScreenMonitoring() {
-        if (intervalId) {
-            clearInterval(intervalId);
-            intervalId = null;
-        }
-        if (lastImage) {
-            lastImage = null;
-        }
-    }
-    async function startScreenMonitoring() {
-        stopScreenMonitoring()
-        const MONITOR_INTERVAL = 1000; // 每秒检查一次
-        const CHANGE_THRESHOLD = 0.1; // 10%的像素变化被认为是明显变化
-        intervalId = setInterval(async () => {
-            try {
-                // 自动获取当前屏幕分辨率
-                const screenSize = screen.getPrimaryDisplay().size;
-                const sources = await desktopCapturer.getSources({
-                    types: ['screen'],
-                    thumbnailSize: screenSize
-                });
-                const primaryDisplay = sources[0];
-                const screenView = { x: 0, y: 0, width: screenSize.width, height: screenSize.height }
-                if (primaryDisplay) {
-                    const fullImage = primaryDisplay.thumbnail;
-                    // 求monitorRegion和screenView的交集
-                    let intersection = {
-                        x: Math.max(monitorRegion.x, screenView.x),
-                        y: Math.max(monitorRegion.y, screenView.y),
-                        width: Math.min(monitorRegion.x + monitorRegion.width, screenView.x + screenView.width) - Math.max(monitorRegion.x, screenView.x),
-                        height: Math.min(monitorRegion.y + monitorRegion.height, screenView.y + screenView.height) - Math.max(monitorRegion.y, screenView.y)
-                    };
-                    const croppedImage = await sharp(fullImage.toPNG())
-                        .extract({
-                            left: intersection.x,
-                            top: intersection.y,
-                            width: intersection.width,
-                            height: intersection.height
-                        })
-                        .toBuffer();
 
-                    if (lastImage) {
-                        worker.postMessage({
-                            oldImage: lastImage,
-                            newImage: croppedImage,
-                            threshold: CHANGE_THRESHOLD
-                        });
-                        worker.once('message', async (hasChanged) => {
-                            if (hasChanged) {
-
-                                console.log('hasChanged')
-
-                                // ocrWindow.webContents.send('ocr-window-status', 'loading');
-                                // await sharp(fullImage.toPNG()).toFile( path.join(app.getPath('pictures'), `screenshot_full.png`));
-                                // ocrWindow.webContents.send('background-image', ``);
-                                let date = Date.now()
-                                const screenshotPath = path.join(app.getPath('pictures'), `screenshot.png`);
-                                await sharp(croppedImage).toFile(screenshotPath);
-                                console.log(`检测到变化,截图已保存: ${screenshotPath}`);
-                                await removeBlackOverlayAndWhiteText(screenshotPath, path.join(app.getPath('pictures'), `screenshot_remove_black.png`));
-                                // 直接将 croppedImage 转换为 base64
-                                const base64Image = croppedImage.toString('base64');
-                                // ocrWindow.webContents.send('background-image', `http://127.0.0.1:58704/screenshot-${date}.png`);
-                                // ocrEngine.stdin.write(JSON.stringify({ image_path: screenshotPath }) + '\n');
-                                // ocrEngine.stdin.write(JSON.stringify({ image_base64: base64Image }) + '\n');
-                            }
-                        });
-                    } else {
-                        // await sharp(fullImage.toPNG()).toFile( path.join(app.getPath('pictures'), `screenshot_full.png`));
-                        // ocrWindow.webContents.send('background-image', ``);
-                        let date = Date.now()
-                        const screenshotPath = path.join(app.getPath('pictures'), `screenshot.png`);
-                        await sharp(croppedImage).toFile(screenshotPath);
-                        console.log(`检测到变化,截图已保存: ${screenshotPath}`);
-                        await removeBlackOverlayAndWhiteText(screenshotPath, path.join(app.getPath('pictures'), `screenshot_remove_black.png`));
-                        // ocrWindow.webContents.send('background-image', `http://127.0.0.1:58704/screenshot-${date}.png`);
-                        const base64Image = croppedImage.toString('base64');
-                        // ocrEngine.stdin.write(JSON.stringify({ image_path: screenshotPath }) + '\n');
-                        // ocrEngine.stdin.write(JSON.stringify({ image_base64: base64Image }) + '\n');
-                    }
-
-                    lastImage = croppedImage;
-                }
-            } catch (error) {
-                logger.error('屏幕监控失败:', error);
-            }
-
-        }, MONITOR_INTERVAL);
-    }
-    ipcMain.handle('start-ocr', async (_, data) => {
+    async handleStartOCR(_, data) {
         logger.info('收到启动 OCR 请求', { data });
-        ocrWindow = new BrowserWindow({
+        this.createOCRWindow();
+        this.initializeOCREngine();
+        this.startWorking();
+        return true;
+    }
+
+    createOCRWindow() {
+        // ... 创建OCR窗口的代码 ...
+        this.ocrWindow = new BrowserWindow({
             frame: false,
             transparent: true,
             icon,
@@ -254,81 +54,176 @@ export function setupOCR(win) {
                 contextIsolation: false,
             },
         });
-        worker = new Worker(path.join(__dirname, '../../child_process/ocr/imageWorker.js'));
-        let ocrEnginePath = path.join(__dirname, '../../child_process/ocr/ocr_engine');
-        console.log({ ocrEnginePath });
-        ocrEngine = spawn(path.join(ocrEnginePath, './RapidOCR-json.exe'), ['--models=' + path.join(ocrEnginePath, './models')]);
-        ocrEngine.stdout.on('data', (data) => {
-            const result = data.toString().trim();
-            console.log(`OCR引擎输出: ${result}`);
-            ocrWindow.webContents.send('ocr-result', result);
-        });
-        ocrEngine.stderr.on('data', (data) => {
-            console.error(`OCR引擎错误: ${data}`);
-            ocrWindow.webContents.send('ocr-error', data.toString());
-        });
-        ocrEngine.on('close', (code) => {
-            console.log(`OCR引擎进程退出,退出码 ${code}`);
-        });
-        ocrWindow.setMinimumSize(100, 100)
-        ocrWindow.setAlwaysOnTop(true, 'screen-saver')
-        ocrWindow.loadURL('http://localhost:5173/ocr');
-
-        function updateWindowInfo() {
-            if (!ocrWindow) return;
-            const bounds = ocrWindow.getBounds();
-            monitorRegion = { ...bounds };
-            ocrWindow.webContents.send('ocr-window-info', bounds);
-            logger.info('OCR窗口信息已更新', { monitorRegion });
-            startScreenMonitoring().catch(err => console.error('启动屏幕监控失败:', err));;
-        }
-        //ocrWindow 设置窗口的大小和位置
-        ocrWindow.setBounds(monitorRegion);
-        ocrWindow.on('ready-to-show', () => {
-            ocrWindow.show();
+        this.ocrWindow.setMinimumSize(100, 100)
+        this.ocrWindow.setAlwaysOnTop(true, 'screen-saver')
+        this.ocrWindow.loadURL('http://localhost:5173/ocr');
+        this.ocrWindow.setBounds(this.monitorRegion);
+        
+        this.ocrWindow.show();
+        this.ocrWindow.on('ready-to-show', () => {
+            this.ocrWindow.show();
             logger.info('OCR 窗口已显示');
-            updateWindowInfo()
+            this.updateWindowInfo()
         });
-        ocrWindow.on('closed', () => {
-            ocrWindow = null;
+        this.ocrWindow.on('closed', () => {
+            this.ocrWindow = null;
             logger.info('OCR 窗口已关闭');
         });
         // 当窗口停止移动或者大小变化时，记录位置和大小
-        ocrWindow.on('move', (event) => {
-            ocrWindow.webContents.send('ocr-window-status', 'loading');
-            stopScreenMonitoring();
+        this.ocrWindow.on('will-move', (event) => {
+            this.moving = true;
         });
-        ocrWindow.on('moved', (event) => {
-            updateWindowInfo()
+        this.ocrWindow.on('moved', (event) => {
+            this.updateWindowInfo()
+            this.moving = false;
         });
 
-        ocrWindow.on('resize', (event) => {
-            ocrWindow.webContents.send('ocr-window-status', 'loading');
-            stopScreenMonitoring();
+        this.ocrWindow.on('will-resize', (event) => {
+            this.moving = true;
         });
-        ocrWindow.on('resized', (event) => {
-            updateWindowInfo()
+        this.ocrWindow.on('resized', (event) => {
+            this.updateWindowInfo()
+            this.moving = false;
         });
-        return true;
-    });
-    ipcMain.handle('ocr-message', (_, data) => {
-        logger.info('收到 OCR 消息', { data });
-        return true;
-    });
-    ipcMain.handle('close-ocr-window', () => {
-        logger.info('收到关闭 OCR 窗口请求');
-        stopScreenMonitoring();
-        if (worker) {
-            worker.terminate();
-            worker = null;
-        }
-        if (ocrWindow) {
-            ocrWindow.close();
+    }
+    updateWindowInfo() {
+        if (!this.ocrWindow) return;
+        // this.ocrWindow.webContents.send('ocr-window-status', 'loading');
+        const bounds = this.ocrWindow.getBounds();
+        this.monitorRegion = { ...bounds };
+        this.ocrWindow.webContents.send('ocr-window-info', bounds);
+        logger.info('OCR窗口信息已更新', this.monitorRegion);
+        // this.startScreenMonitoring().catch(err => console.error('启动屏幕监控失败:', err));;
+    }
+    initializeOCREngine() {
+        // ... 初始化OCR引擎的代码 ...
+        let ocrEnginePath = path.join(__dirname, '../../child_process/ocr/ocr_engine');
+        this.ocrEngine = spawn(path.join(ocrEnginePath, './RapidOCR-json.exe'), ['--models=' + path.join(ocrEnginePath, './models')]);
+        this.ocrEngine.stdout.on('data', async (data) => {
+            const result = data.toString().trim();
+            console.log(`OCR引擎输出: ${result}`);
+            this.ocrWindow.webContents.send('ocr-result', result);
+            // this.ocr_processing = false
+        });
+        this.ocrEngine.stderr.on('data', (data) => {
+            console.error(`OCR引擎错误: ${data}`);
+            this.ocrWindow.webContents.send('ocr-error', data.toString());
+            this.ocr_processing = false
+        });
+        this.ocrEngine.on('close', (code) => {
+            console.log(`OCR引擎进程退出,退出码 ${code}`);
+            this.ocr_processing = false
+        });
+    }
+    async getBoundingImage() {
+        let sources = await desktopCapturer.getSources({
+            types: ['screen'],
+            thumbnailSize: this.screenSize
+        });
+        let primaryDisplay = sources[0];
+        if (primaryDisplay) {
+            let fullImage = primaryDisplay.thumbnail;
+            // 求monitorRegion和screenView的交集
+            let intersection = {
+                x: Math.max(this.monitorRegion.x, this.screenView.x),
+                y: Math.max(this.monitorRegion.y, this.screenView.y),
+                width: Math.min(this.monitorRegion.x + this.monitorRegion.width, this.screenView.x + this.screenView.width) - Math.max(this.monitorRegion.x, this.screenView.x),
+                height: Math.min(this.monitorRegion.y + this.monitorRegion.height, this.screenView.y + this.screenView.height) - Math.max(this.monitorRegion.y, this.screenView.y)
+            };
+            let croppedImage = await sharp(fullImage.toPNG())
+                .extract({
+                    left: intersection.x,
+                    top: intersection.y,
+                    width: intersection.width,
+                    height: intersection.height
+                })
+                .toBuffer();
+            return croppedImage
         } else {
-            logger.warn('OCR 窗口不存在，无法关闭');
+            return null
         }
-    });
+    }
+    async applyOCR(croppedImage) {
+        
+        this.ocrWindow.webContents.send('ocr-window-status', 'loading')
+        // this.lastImage = croppedImage
+        this.ocr_processing = true
+        // let date = Date.now()
+        const screenshotPath = path.join(app.getPath('pictures'), `screenshot.png`);
+        const screenshotPathRemoveBlack = path.join(app.getPath('pictures'), `screenshot_remove_black.png`);
+        await sharp(croppedImage).toFile(screenshotPath);
+        console.log(`截图已保存: ${screenshotPath}`);
+        await removeBlackOverlayAndWhiteText(screenshotPath, screenshotPathRemoveBlack);
+        // const base64Image = croppedImage.toString('base64');
+        this.ocrEngine.stdin.write(JSON.stringify({ image_path: screenshotPathRemoveBlack }) + '\n');
+        // ocrEngine.stdin.write(JSON.stringify({ image_base64: base64Image }) + '\n');
+    }
+    async handleOCRWindowFixed(_, data) {
+        this.lastImage = await this.getBoundingImage()
+        this.ocr_processing = false
+    }
+    handleCloseOCRWindow() {
+        logger.info('收到关闭 OCR 窗口请求');
+        this.ocr_processing = false
+        this.lastImage = null
+        if(this.ocrEngine){ 
+            this.ocrEngine.kill()
+            this.ocrEngine = null
+        }
+        this.stopWorking();
+        this.closeOCRWindow();
+    }
+    closeOCRWindow() {
+        if (this.ocrWindow) {
+            this.ocrWindow.close();
+            this.ocrWindow = null;
+        }
+    }
 
+    async startWorking() {
+        await this.sleep(1000)
+        this.working = true;
+        while (this.working) {
 
+            if(!this.ocrWindow || !this.ocrEngine ){
+                console.log('ocrWindow or ocrEngine is null')
+                await this.sleep(300)
+                continue
+            }
+
+            if(this.moving){
+                // 如果窗口正在移动，则等待300ms
+                console.log('moving')
+                this.ocrWindow.webContents.send('ocr-window-status', 'loading')
+                await this.sleep(300)
+                continue
+            }
+
+            if(this.ocr_processing){
+                // 如果ocr正在处理，则等待300ms
+                console.log('ocr_processing')
+                // this.ocrWindow.webContents.send('ocr-window-status', 'loading')
+                await this.sleep(300)
+                continue
+            }
+            let croppedImage = await this.getBoundingImage() 
+            let hasChanged = await getImageDiff(this.lastImage, croppedImage, 0.01)
+            if (hasChanged) {
+                croppedImage = await this.getBoundingImage() 
+                console.log('hasChanged!!')
+                this.applyOCR(croppedImage)
+                continue
+            }
+            console.log('working')
+            await this.sleep(1000)
+        }
+    }
+    stopWorking() {
+        this.working = false;
+    }
+    // ... 其他处理方法 ...
 }
 
+export function setupOCR() {
+    return new OCRService();
+}

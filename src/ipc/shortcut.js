@@ -7,25 +7,10 @@ const path = require('path');
 import logger from '../utils/logger';
 import fs from 'fs';
 
-// import Store from 'electron-store';
-// 创建一个新的 Store 实例
-// const store = new Store();
-
 let current_text_path = ''
 let text_line = []
 let text_index = 0
 
-// function getText(text_path) {
-//     if(current_text_path !== text_path){
-//         current_text_path = text_path
-//         text_line = fs.readFileSync(text_path, 'utf8').split('\n')
-//         text_index = 0
-//     }
-//     if(text_index >= text_line.length){
-//         text_index = 0
-//     }
-//     return text_line[text_index++]
-// }
 function getText(text_path) {
     if(current_text_path !== text_path){
         current_text_path = text_path
@@ -99,13 +84,6 @@ export function setupShortcut(win, sender) {
                 text = clipboard.readText()
             }
             sender.send({ ...message, data: text })
-            // if (message.use_text && message.text_path) {
-            //     let text = getText(message.text_path)
-            //     sender.send({ ...message, data: text, censor_active: message.censor_active })
-            // } else {
-
-            //     sender.send({ ...message, data: clipboard.readText(), censor_active: message.censor_active })
-            // }
         } else if (message.onPageUp) {
             win.webContents.send('press_page_up')
         } else if (message.onPageDown) {

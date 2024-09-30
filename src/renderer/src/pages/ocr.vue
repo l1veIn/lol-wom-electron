@@ -1,17 +1,12 @@
 <template>
-  <view class="text-white radius flex flex-direction padding-sm dragable background align-center justify-center"
+  <view class="text-white radius flex flex-direction padding-sm dragable align-center justify-center"
     :style="{ height: '100vh', width: '100vw', 'background-color': `rgba(0, 0, 0, ${opacity})` }">
-    <!-- <text class="text-white-opacity">OCR</text> -->
-    <view style="height: 100px;width: 100px;background-color: rgba(255, 255, 255, 0.4);"></view>
-    <!-- <svg>
-      <text x="10" y="50" font-size="90" fill="rgba(255, 255, 255, 0.4)">OCR</text>
-    </svg> -->
-    <!-- <svg width="200" height="50">
-      <path id="textPath" d="M0,25 H200" fill="none" />
-      <text>
-        <textPath href="#textPath" fill="rgba(255, 255, 255, 0.4)">您的文字</textPath>
-      </text>
-    </svg> -->
+    <!-- <text class="text-white-opacity">...</text> -->
+    <view class="flex align-center" v-if="loading">
+      <view class="middle-box"></view>
+      <view class="middle-box middle-box1"></view>
+      <view class="middle-box"></view>
+    </view>
   </view>
 </template>
 
@@ -19,6 +14,7 @@
 export default {
   data() {
     return {
+      loading: true,
       lock: false,
       isOverButton: false,
       opacity: 0.9,
@@ -39,7 +35,19 @@ export default {
     });
     LCU.removeAllListeners('ocr-result')
     LCU.on('ocr-result', (data) => {
-      console.log('OCR 结果', data);
+      try {
+        console.log('OCR 结果', JSON.parse(data));
+        this.ocrResult = JSON.parse(data);
+        this.loading = false;
+        LCU.invoke('ocr-window-fixed')
+      } catch (error) {
+        console.log('OCR 结果', data);
+      }
+    });
+    LCU.removeAllListeners('ocr-window-status')
+    LCU.on('ocr-window-status', (data) => {
+      console.log('OCR 窗口状态', data);
+      this.loading = data === 'loading';
     });
   },
   methods: {
@@ -71,24 +79,53 @@ page {
   background: rgba(0, 0, 0, 0);
 }
 
+.middle-box {
+  animation: pulse 0.5s infinite ease-in-out;
+}
+
+@keyframes pulse {
+
+  0%,
+  100% {
+    height: 10px;
+  }
+
+  50% {
+    height: 20px;
+  }
+}
+
+.middle-box1 {
+  animation: pulse1 0.5s infinite ease-in-out;
+}
+
+@keyframes pulse1 {
+
+  0%,
+  100% {
+    height: 20px;
+  }
+
+  50% {
+    height: 10px;
+  }
+}
+
+.middle-box {
+  width: 10px;
+  height: 10px;
+  background-color: rgba(255, 255, 255, 0.4);
+  margin: 10px;
+}
+
+
 .text-white-opacity {
+  font-family: 'PixelFont', sans-serif;
   color: rgba(255, 255, 255, 0.4);
-  /* -webkit-font-smoothing: none;
-  -moz-osx-font-smoothing: grayscale; */
-
   font-size: 90px;
-  transform: translate(0.5px, 0.5px);
-  font-weight: bold;
-  transform: scale(0.8);
-  transform-origin: left top;
-  
-  image-rendering: pixelated;
-  image-rendering: crisp-edges;
-
 }
 
 .background {
-  background-image: url('../../assets/images/background.png');
   background-size: 100% 100%;
 }
 

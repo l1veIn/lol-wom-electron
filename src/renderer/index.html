@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8" />
-  <title>语音转录字幕</title>
+  <title>字幕</title>
   <meta http-equiv="Content-Security-Policy" content="default-src *;
    img-src * 'self' data: https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' *;
    style-src  'self' 'unsafe-inline' *">
@@ -15,3 +15,43 @@
 </body>
 
 </html>
+
+<style>
+  @font-face {
+    font-family: 'PixelFont';
+    src: url('/fonts/fusion-pixel-8px-proportional-zh_hans.woff2') format('woff2');
+    unicode-range: U+4E00-9FFF;
+    /* 简体中文 Unicode 范围 */
+  }
+
+  /* 繁体中文 */
+  @font-face {
+    font-family: 'PixelFont';
+    src: url('/fonts/fusion-pixel-12px-monospaced-zh_hant.woff2') format('woff2');
+    unicode-range: U+4E00-9FFF, U+3400-4DBF;
+    /* 繁体中文 Unicode 范围 */
+  }
+
+  /* 日语 */
+  @font-face {
+    font-family: 'PixelFont';
+    src: url('/fonts/fusion-pixel-12px-monospaced-ja.woff2') format('woff2');
+    unicode-range: U+3000-30FF, U+FF00-FFEF, U+4E00-9FAF;
+    /* 日语 Unicode 范围 */
+  }
+
+  /* 韩语 */
+  @font-face {
+    font-family: 'PixelFont';
+    src: url('/fonts/fusion-pixel-12px-monospaced-ko.woff2') format('woff2');
+    unicode-range: U+AC00-D7AF, U+1100-11FF;
+    /* 韩语 Unicode 范围 */
+  }
+
+  /* 英语和其他拉丁字符 */
+  @font-face {
+    font-family: 'PixelFont';
+    src: url('/fonts/fusion-pixel-12px-monospaced-latin.woff2') format('woff2');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+  }
+</style>
