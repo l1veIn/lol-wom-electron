@@ -2,7 +2,22 @@
 
 const sharp = require('sharp');
 
-export async function removeBlackOverlayAndWhiteText(inputPath, outputPath) {
+function getMixedMask(blackOverlay, whiteText) {
+    // 计算混合后的alpha值
+    let mixedAlpha = (blackOverlay[3] + whiteText[3] * (1 - blackOverlay[3])).toFixed(2);
+    let get_channel = (i) => {
+        return ((blackOverlay[i] * blackOverlay[3] + whiteText[i] * whiteText[3]) / mixedAlpha).toFixed(1)
+    }
+    // 计算混合后的通道值
+    let mixedMask = [get_channel(0), get_channel(1), get_channel(2), mixedAlpha]
+    console.log(`mixedMask: ${mixedMask}`);
+    return mixedMask
+}
+
+export async function removeBlackOverlayAndWhiteText(inputPath, outputPath, blackOverlay = [0, 0, 0, 0.9], whiteText = [255, 255, 255, 0.4]) {
+    // 计算混合后的alpha值
+    // let mixedMask = getMixedMask(blackOverlay, whiteText)
+    let textPixels = 0
     try {
         const image = sharp(inputPath);
         const { data, info } = await image
@@ -12,23 +27,26 @@ export async function removeBlackOverlayAndWhiteText(inputPath, outputPath) {
         const outputBuffer = Buffer.alloc(data.length);
 
         for (let i = 0; i < data.length; i += info.channels) {
-            let isTextArea = true;
-            for (let c = 0; c < 3; c++) {
-                if (Math.abs(data[i + c] - 108) > 10) {
-                    isTextArea = false;
-                    break;
-                }
-            }
+            // let isTextArea = true;
+            // for (let c = 0; c < 3; c++) {
+            //     if (Math.abs(data[i + c] - mixedMask[c]) > 10) {
+            //         isTextArea = false;
+            //         break;
+            //     }
+                
+            //     console.log(data[i + c], mixedMask[c])
+            // }
+            // if(isTextArea){
+            //     textPixels++
+            // }
             for (let c = 0; c < 3; c++) {
                 let pixelValue = data[i + c];
-
-                if (isTextArea) {
-                    // 文字区域：去除rgba(108, 108, 108, 0.94)遮罩
-                    pixelValue = (pixelValue - 0.94 * 108) / 0.06;
-                } else {
-                    // 背景区域：去除rgba(0, 0, 0, 0.9)遮罩
-                    pixelValue = (pixelValue - 0.9 * 0) / 0.1;
-                }
+                // if (isTextArea) {
+                //     pixelValue = (pixelValue - mixedMask[3] * mixedMask[c]) / (1 - mixedMask[3]);
+                // } else {
+                //     pixelValue = (pixelValue - blackOverlay[3] * 0) / (1 - blackOverlay[3]);
+                // }
+                pixelValue = (pixelValue - blackOverlay[3] *  blackOverlay[c]) / (1 - blackOverlay[3]);
 
                 pixelValue = Math.max(0, Math.min(255, pixelValue));
                 outputBuffer[i + c] = Math.round(pixelValue);
@@ -47,7 +65,7 @@ export async function removeBlackOverlayAndWhiteText(inputPath, outputPath) {
         })
             .toFile(outputPath);
 
-        console.log('图像处理完成');
+        console.log('图像处理完成,textPixels:', textPixels);
     } catch (error) {
         console.error('处理图像时发生错误:', error);
     }
@@ -55,7 +73,7 @@ export async function removeBlackOverlayAndWhiteText(inputPath, outputPath) {
 
 
 export async function getImageDiff(oldImage, newImage, threshold) {
-    if(!oldImage && newImage){
+    if (!oldImage && newImage) {
         return true
     }
     const [oldBuffer, newBuffer] = await Promise.all([
