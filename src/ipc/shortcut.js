@@ -12,13 +12,13 @@ let text_line = []
 let text_index = 0
 
 function getText(text_path) {
-    if(current_text_path !== text_path){
+    if (current_text_path !== text_path) {
         current_text_path = text_path
         const fullText = fs.readFileSync(text_path, 'utf8')
         text_line = splitChineseTextIntoLines(fullText, 30, 50)
         text_index = 0
     }
-    if(text_index >= text_line.length){
+    if (text_index >= text_line.length) {
         text_index = 0
     }
     return text_line[text_index++]
@@ -55,7 +55,7 @@ function isPunctuation(char) {
     return punctuations.includes(char)
 }
 
-export function setupShortcut(win, sender) {
+export function setupShortcut(win, sender, ocrInstance) {
     // 存储当前注册的快捷键状态
     // let currentStatus = store.get('currentStatus', {});
     logger.info('开始设置快捷键');
@@ -84,6 +84,10 @@ export function setupShortcut(win, sender) {
                 text = clipboard.readText()
             }
             sender.send({ ...message, data: text })
+        } else if (message.runOCR) {
+            if (ocrInstance.ocrWindow) {
+                ocrInstance.performCheck()
+            }
         } else if (message.onPageUp) {
             win.webContents.send('press_page_up')
         } else if (message.onPageDown) {
@@ -116,8 +120,10 @@ export function setupShortcut(win, sender) {
     ipcMain.handle('unregister-shortcut', (event, shortcut) => {
         try {
             logger.info(`注销快捷键: ${shortcut}`);
-            shortcutProcess.send({ key: shortcut, remove: true });
-            delete currentStatus[shortcut];
+            if (currentStatus[shortcut]) {
+                shortcutProcess.send({ key: shortcut, remove: true });
+                delete currentStatus[shortcut];
+            }
             // store.set('currentStatus', currentStatus);
             return true;
         } catch (error) {

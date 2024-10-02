@@ -5,6 +5,7 @@ const {
     keyboard,
     Key,
 } = require("@nut-tree-fork/nut-js");
+const path = require('path');
 
 const { GlobalKeyboardListener } = require('node-global-key-listener');
 let register_map = {};
@@ -27,17 +28,26 @@ async function register(message) {
     console.log('register', message);
     let runner;
     // 处理几个特殊键，直接执行
+    // else if (message.script == 'sendClipboard2Game') {
+    //     runner = async () => { process.send({ sendClipboard2Game: true, ...message }) };
+    // } else if (message.script == 'sendClipboard2GameAll') {
+    //     runner = async () => { process.send({ sendClipboard2GameAll: true, ...message }) };
+    // }
     if (message.key == 'PAGE UP') {
         runner = async () => { process.send({ onPageUp: true }) };
     } else if (message.key == 'PAGE DOWN') {
         runner = async () => { process.send({ onPageDown: true }) };
-    } else if (message.script == 'sendClipboard2Game') {
-        runner = async () => { process.send({ sendClipboard2Game: true, ...message }) };
-    } else if (message.script == 'sendClipboard2GameAll') {
-        runner = async () => { process.send({ sendClipboard2GameAll: true, ...message }) };
     } else if (message.script) {
-        runner = require(message.script);
+        if (path.isAbsolute(message.script) || message.script.startsWith('./') || message.script.startsWith('../')) {
+            runner = require(message.script);
+        } else {
+            console.log(`${message.script} not a valid path`);
+            let reply = { ...message };
+            reply[message.script] = true;
+            runner = async () => { process.send(reply) };
+        }
     }
+
     if (register_map[message.key]) {
         console.log(`shortcut ${message.key} registed, updating...`);
         unregister(message);
@@ -47,7 +57,7 @@ async function register(message) {
         isRunning: false,
         listener: async (keypress, down) => {
             // console.log('keypress', keypress.name);
-            if (!getCondition(keypress, message, down)) { 
+            if (!getCondition(keypress, message, down)) {
                 return
             }
             if (!register_map[message.key].isRunning) {
@@ -81,7 +91,7 @@ function unregister(message) {
     }
 }
 
-function stopASR() {
+function stop() {
     console.log("stop all listener and quit...");
     Object.keys(register_map).forEach(key => {
         v.removeListener(register_map[key].listener);
@@ -98,7 +108,7 @@ process.on('message', async (message) => {
             register(message);
         }
     } else if (message === 'stop') {
-        stopASR();
+        stop();
         process.exit();
     }
 });

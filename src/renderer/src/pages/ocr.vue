@@ -10,7 +10,7 @@
     <view v-else class="ocr_result">
       <div v-for="(item, index) in processedOcrResult" :key="index" class="ocr-item" :style="item.boxStyle">
         <div class="text-container">
-          <span :ref="`text-${index}`" :style="{'color':fontColor}">{{ item.text }}</span>
+          <span :ref="`text-${index}`" :style="{ 'color': fontColor, 'text-align': 'left' }">{{ item.text }}</span>
         </div>
       </div>
     </view>
@@ -23,11 +23,11 @@ export default {
     return {
       loading: true,
       ocrResult: [],
-      blackOverlay: [255, 255, 0, 0.4],
+      blackOverlay: [0, 0, 0, 0.6],
       processedOcrResult: [],
-      fontColor: 'rgba(0, 0, 255, 0.8)',
+      fontColor: 'rgba(0, 0, 0, 0.9)',
       boxType: 'background',
-      boxColor: 'rgba(0, 0, 0, 0.9)',
+      boxColor: 'rgba(255, 255, 255, 0.9)',
     }
   },
   watch: {
@@ -82,10 +82,10 @@ export default {
     LCU.removeAllListeners('ocr-window-config')
     LCU.on('ocr-window-config', (data) => {
       console.log('设置OCR窗口', data);
-      this.blackOverlay = data.blackOverlay
-      this.boxType = data.boxType
-      this.boxColor = data.boxColor
-      this.fontColor = data.fontColor
+      if (data.blackOverlay) this.blackOverlay = data.blackOverlay
+      if (data.boxType) this.boxType = data.boxType
+      if (data.boxColor) this.boxColor = data.boxColor
+      if (data.fontColor) this.fontColor = data.fontColor
     });
   },
   methods: {
@@ -112,7 +112,7 @@ export default {
         style.borderRadius = '1px'
       } else if (this.boxType === 'background') {
         style.backgroundColor = this.boxColor
-      } 
+      }
 
       return style
     },
@@ -127,6 +127,42 @@ export default {
       }
     },
     processOcrResult(result) {
+      // 定义一个辅助函数来检查字符是否为标点符号
+      const isPunctuation = (char) => {
+        const punctuationRegex = /[。，、；：？！""''（）《》【】1234567890\,\.]/;
+        return punctuationRegex.test(char);
+      };
+
+      const getLeftTopDistance = (point1, point2) => {
+        return Math.sqrt((point1[0] - point2[0]) ** 2 + (point1[1] - point2[1]) ** 2);
+      };
+
+      // 合并相邻的box
+      const mergedResult = [];
+      for (let i = 0; i < result.length; i++) {
+        if (i != 0) {
+          console.log(getLeftTopDistance(result[i - 1].box[3], result[i].box[0]))
+        }
+        if (i === 0 || isPunctuation(result[i - 1].text.slice(-1)) || isPunctuation(result[i].text[0]) || getLeftTopDistance(result[i - 1].box[3], result[i].box[0]) > 10) {
+          mergedResult.push({ ...result[i] });
+        } else {
+          // 合并当前项与前一项
+          const prevItem = mergedResult[mergedResult.length - 1];
+          prevItem.text = prevItem.text + ' ' + result[i].text;
+          // 更新box，取两个box的外围边界
+          prevItem.box = [
+            [Math.min(prevItem.box[0][0], result[i].box[0][0]), Math.min(prevItem.box[0][1], result[i].box[0][1])],
+            [Math.max(prevItem.box[1][0], result[i].box[1][0]), Math.min(prevItem.box[1][1], result[i].box[1][1])],
+            [Math.max(prevItem.box[2][0], result[i].box[2][0]), Math.max(prevItem.box[2][1], result[i].box[2][1])],
+            [Math.min(prevItem.box[3][0], result[i].box[3][0]), Math.max(prevItem.box[3][1], result[i].box[3][1])]
+          ];
+        }
+      }
+
+      // 使用合并后的结果替换原始结果
+      result = mergedResult;
+
+
       this.processedOcrResult = result.map(item => ({
         ...item,
         boxStyle: this.getBoxStyle(item.box)
@@ -319,21 +355,24 @@ page {
 
 .ocr-item {
   box-sizing: border-box;
+  display: flex;
+  justify-content: start;
+  align-items: start;
 }
 
 .text-container {
   width: 100%;
   height: 100%;
   display: flex;
-  align-items: center;
-  justify-content: center;
+  align-items: start;
+  justify-content: start;
   /* writing-mode: vertical-rl;
   text-orientation: upright; */
 }
 
 .text-container span {
   word-break: break-all;
-  text-align: center;
+  text-align: left;
   color: rgba(255, 255, 255, 0.8);
 }
 </style>

@@ -10,6 +10,8 @@ import { setupShortcut } from '../ipc/shortcut';
 import { setupNedb } from '../ipc/nedb';
 import { setupOCR } from '../ipc/ocr';
 import logger from '../utils/logger';
+import { setupTranslateIpc } from '../ipc/translate';
+
 
 const path = require('path');
 
@@ -84,9 +86,10 @@ export function setupIPC(win, store) {
       console.log(`命令输出: ${stdout}`);
     });
   })
+  let ocrInstance = setupOCR(win)
   setupASR(win)
   setupASRModelManager(win)
-  setupShortcut(win, sender)
   setupNedb()
-  setupOCR(win)
+  setupShortcut(win, sender, ocrInstance)
+  setupTranslateIpc()
 }

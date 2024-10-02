@@ -25,9 +25,9 @@ export function setupASR(win) {
     let processedMessage = applyReplacementRules(text);
 
     clipboard.writeText(processedMessage);
-    win.webContents.send('asr-message', {text: processedMessage, speaker: speaker});
+    win.webContents.send('asr-message', { text: processedMessage, speaker: speaker });
     if (lyricsWindow) {
-      lyricsWindow.webContents.send('asr-message', {text: processedMessage, speaker: speaker});
+      lyricsWindow.webContents.send('asr-message', { text: processedMessage, speaker: speaker });
     }
   });
 
@@ -109,11 +109,20 @@ export function setupASR(win) {
         lyricsWindow.loadFile(join(__dirname, '../renderer/index.html/lyrics'))
       }
       lyricsWindow.setAlwaysOnTop(true, 'screen-saver')
+      if (config.position) {
+        lyricsWindow.setBounds(config.position)
+      }
       lyricsWindow.on('ready-to-show', () => {
         lyricsWindow.webContents.send('config', config);
         lyricsWindow.show()
         logger.info('歌词窗口已显示');
       })
+      lyricsWindow.on('moved', (event) => {
+        win.webContents.send('setStorage', { key: 'lyrics-window-position', value: lyricsWindow.getBounds() });
+      });
+      lyricsWindow.on('resized', (event) => {
+        win.webContents.send('setStorage', { key: 'lyrics-window-position', value: lyricsWindow.getBounds() });
+      });
       lyricsWindow.on('closed', () => {
         lyricsWindow = null
         logger.info('歌词窗口已关闭');

@@ -22,8 +22,8 @@ class OCRService {
         this.moving = false;
         this.config = {}
         this.screenView = { x: 0, y: 0, width: this.screenSize.width, height: this.screenSize.height };
-        this.setupIPCHandlers();
         this.win = win
+        this.setupIPCHandlers();
     }
     async sleep(ms) {
         return new Promise(resolve => setTimeout(resolve, ms));
@@ -38,13 +38,16 @@ class OCRService {
     }
     setOCRWindowConfig(_, data) {
         logger.info('收到设置 OCR 窗口配置请求', data);
-        this.config = data
-        this.ocrWindow.webContents.send('ocr-window-config', data);
-        if(this.config.auto_start){
-            this.startWorking()
-        }else{
-            this.stopWorking()
+        if (this.ocrWindow && this.ocrEngine) {
+            this.config = data
+            this.ocrWindow.webContents.send('ocr-window-config', data);
+            if (this.config.auto_start) {
+                this.startWorking()
+            } else {
+                this.stopWorking()
+            }
         }
+
     }
     async handleStartOCR(_, data) {
         logger.info('收到启动 OCR 请求', { data });
