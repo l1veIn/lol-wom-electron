@@ -18,6 +18,7 @@
 </template>
 
 <script>
+const divideFlag = '|';
 export default {
   data() {
     return {
@@ -54,7 +55,6 @@ export default {
           this.ocrResult = JSON.parse(data).data;
           // 渲染ocr结果
           this.loading = false;
-          LCU.invoke('ocr-window-fixed')
         } else {
           this.ocrResult = []
           this.loading = false;
@@ -158,11 +158,8 @@ export default {
           ];
         }
       }
-
       // 使用合并后的结果替换原始结果
       result = mergedResult;
-
-
       this.processedOcrResult = result.map(item => ({
         ...item,
         boxStyle: this.getBoxStyle(item.box)
@@ -174,7 +171,107 @@ export default {
             this.fitTextToBox(textElement, parseFloat(item.boxStyle.width), parseFloat(item.boxStyle.height));
           }
         });
+        if (this.processedOcrResult.length > 0) {
+          this.translateText()
+        } else {
+
+          LCU.invoke('ocr-window-fixed')
+        }
+
       });
+    },
+    async translateText() {
+      // 设置一个独特的分隔符，用来区分内容
+      let text = this.processedOcrResult.map(item => {
+        return item.text.trim().replaceAll(divideFlag, '')
+      }).join(divideFlag)
+      let res = await LCU.invoke('base_translate', { text, sourceLang: 'zh', targetLang: 'en', service: 'baidu', options: { timeout: 5000 } })
+      console.log(res)
+      if (res.success && res.result.data) {
+        let translateText = []
+        if (res.result.data[0].result.length == this.processedOcrResult.length) {
+          translateText = res.result.data[0].result
+        } else {
+          translateText = res.result.data[0].dst.split(divideFlag)
+        }
+        console.log('翻译结果', translateText)
+        this.processedOcrResult.forEach((item, index) => {
+          item.text = translateText[index]
+
+          const textElement = this.$refs[`text-${index}`]?.[0];
+          if (textElement) {
+
+            this.$nextTick(() => {
+              this.fitTextToBox(textElement, parseFloat(item.boxStyle.width), parseFloat(item.boxStyle.height));
+            })
+          }
+        })
+        
+        LCU.invoke('ocr-window-fixed')
+        // this.$nextTick(() => {
+        //   // 目前转中文效果最好，因为中文信息密度大，字能看清，英文信息密度小，字太小
+        //   // this.adjustBox()
+        // })
+      }
+    },
+    adjustBox() {
+      const adjustedBoxes = []
+
+      this.processedOcrResult.forEach((item, index) => {
+        const textElement = this.$refs[`text-${index}`]?.[0]
+        if (!textElement) return
+
+        const originalBox = item.boxStyle
+        const originalLeft = parseFloat(originalBox.left)
+        const originalTop = parseFloat(originalBox.top)
+        let newWidth = parseFloat(originalBox.width)
+        let newHeight = parseFloat(originalBox.height)
+
+        // 初始化新的 box 样式
+        const newBoxStyle = { ...originalBox }
+
+        // 逐步增加宽度和高度,直到文本适合或达到限制
+        while (
+          (textElement.scrollWidth > textElement.clientWidth ||
+            textElement.scrollHeight > textElement.clientHeight) &&
+          newWidth < window.innerWidth &&
+          newHeight < window.innerHeight
+        ) {
+          console.log('调整box', newWidth, newHeight)
+          newWidth += 1
+          newHeight += 1
+
+          // 检查是否与其他 box 重叠
+          const isOverlapping = adjustedBoxes.some(otherBox => this.checkOverlap(
+            originalLeft, originalTop, newWidth, newHeight,
+            parseFloat(otherBox.left), parseFloat(otherBox.top),
+            parseFloat(otherBox.width), parseFloat(otherBox.height)
+          ))
+
+          if (isOverlapping) {
+            // 如果重叠,回退到上一个有效大小
+            newWidth -= 1
+            newHeight -= 1
+            break
+          }
+
+          newBoxStyle.width = `${newWidth}px`
+          newBoxStyle.height = `${newHeight}px`
+          this.fitTextToBox(textElement, newWidth, newHeight)
+        }
+
+        // 更新 box 样式
+        item.boxStyle = newBoxStyle
+        adjustedBoxes.push(newBoxStyle)
+
+        // 重新应用文本适应
+        this.$nextTick(() => {
+          this.fitTextToBox(textElement, newWidth, newHeight)
+        })
+      })
+    },
+    checkOverlap(x1, y1, w1, h1, x2, y2, w2, h2) {
+      return !(x1 + w1 <= x2 || x2 + w2 <= x1 || y1 + h1 <= y2 || y2 + h2 <= y1)
     }
   }
 }
