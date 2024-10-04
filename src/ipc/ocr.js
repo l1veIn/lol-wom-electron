@@ -111,13 +111,26 @@ class OCRService {
         this.monitorRegion = { ...bounds };
         this.ocrWindow.webContents.send('ocr-window-info', bounds);
         logger.info('OCR窗口信息已更新', this.monitorRegion);
+        // console.log('OCR窗口信息已更新', this.win);
         this.win.webContents.send('setStorage', { key: 'ocr-window-position', value: bounds });
     }
     initializeOCREngine() {
         let that = this
         // ... 初始化OCR引擎的代码 ...
         let ocrEnginePath = path.join(__dirname, '../../child_process/ocr/ocr_engine');
-        this.ocrEngine = spawn(path.join(ocrEnginePath, './RapidOCR-json.exe'), ['--models=' + path.join(ocrEnginePath, './models')]);
+        let args = ['--models=' + path.join(ocrEnginePath, './models')]
+        if (this.config.lang == 'ko') {
+            args.push('--det=ch_PP-OCRv3_det_infer.onnx')
+            args.push('--cls=ch_ppocr_mobile_v2.0_cls_infer.onnx')
+            args.push('--rec=rec_korean_PP-OCRv3_infer.onnx')
+            args.push('--keys=dict_korean.txt')
+        } else if (this.config.lang == 'ja') {
+            args.push('--det=ch_PP-OCRv3_det_infer.onnx')
+            args.push('--cls=ch_ppocr_mobile_v2.0_cls_infer.onnx')
+            args.push('--rec=rec_japan_PP-OCRv3_infer.onnx')
+            args.push('--keys=dict_japan.txt')
+        }
+        this.ocrEngine = spawn(path.join(ocrEnginePath, './RapidOCR-json.exe'), args);
         this.ocrEngine.stdout.on('data', async (data) => {
             const result = data.toString().trim();
             console.log(`OCR引擎输出: ${result}`);
@@ -233,7 +246,7 @@ class OCRService {
         }
 
         let croppedImage = await this.getBoundingImage();
-        let hasChanged = await getImageDiff(this.lastImage, croppedImage, this.config.imageDiffthreshold || 0.01);
+        let hasChanged = await getImageDiff(this.lastImage, croppedImage, 0.001);
 
         if (hasChanged) {
             console.log('hasChanged!!');

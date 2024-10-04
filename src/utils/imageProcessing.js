@@ -89,9 +89,9 @@ export async function getImageDiff(oldImage, newImage, threshold) {
     let changedPixels = 0;
     for (let i = 0; i < oldData.length; i += 3) {
         if (
-            Math.abs(oldData[i] - newData[i]) > 10 ||
-            Math.abs(oldData[i + 1] - newData[i + 1]) > 10 ||
-            Math.abs(oldData[i + 2] - newData[i + 2]) > 10
+            Math.abs(oldData[i] - newData[i]) > 5 ||
+            Math.abs(oldData[i + 1] - newData[i + 1]) > 5 ||
+            Math.abs(oldData[i + 2] - newData[i + 2]) > 5
         ) {
             changedPixels++;
         }

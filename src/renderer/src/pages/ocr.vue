@@ -18,7 +18,7 @@
 </template>
 
 <script>
-const divideFlag = '|';
+const divideFlag = '**';
 export default {
   data() {
     return {
@@ -175,7 +175,7 @@ export default {
           this.translateText()
         } else {
 
-          LCU.invoke('ocr-window-fixed')
+          // LCU.invoke('ocr-window-fixed')
         }
 
       });
@@ -185,14 +185,14 @@ export default {
       let text = this.processedOcrResult.map(item => {
         return item.text.trim().replaceAll(divideFlag, '')
       }).join(divideFlag)
-      let res = await LCU.invoke('base_translate', { text, sourceLang: 'zh', targetLang: 'en', service: 'baidu', options: { timeout: 5000 } })
+      let res = await LCU.invoke('base_translate', { text, sourceLang: 'kor', targetLang: 'zh', service: 'baidu', options: { timeout: 5000 } })
       console.log(res)
       if (res.success && res.result.data) {
         let translateText = []
         if (res.result.data[0].result.length == this.processedOcrResult.length) {
           translateText = res.result.data[0].result
         } else {
-          translateText = res.result.data[0].dst.split(divideFlag)
+          translateText = res.result.data[0].dst.trim().split(divideFlag)
         }
         console.log('翻译结果', translateText)
         this.processedOcrResult.forEach((item, index) => {
@@ -206,8 +206,8 @@ export default {
             })
           }
         })
-        
         LCU.invoke('ocr-window-fixed')
+
         // this.$nextTick(() => {
         //   // 目前转中文效果最好，因为中文信息密度大，字能看清，英文信息密度小，字太小
         //   // this.adjustBox()
