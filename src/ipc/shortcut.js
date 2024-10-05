@@ -102,11 +102,13 @@ export function setupShortcut(win, sender, ocrInstance) {
         return shortcut in currentStatus;
     });
     // 处理注册快捷键的请求
-    ipcMain.handle('register-shortcut', (event, shortcut, script, censor_active, use_text, text_path) => {
+    ipcMain.handle('register-shortcut', (event, shortcut, script, censor_active, use_text, text_path, press_interval ) => {
+        // let { censor_active, use_text, text_path, press_interval } = args
+        // console.log('register-shortcut', args)
         try {
             logger.info(`注册快捷键: ${shortcut}`);
             console.log('register-shortcut', shortcut, script);
-            shortcutProcess.send({ key: shortcut, script: script || 'sendClipboard2Game', censor_active, use_text, text_path });
+            shortcutProcess.send({ key: shortcut, script: script || 'sendClipboard2Game', censor_active, use_text, text_path, press_interval });
             currentStatus[shortcut] = script || 'sendClipboard2Game';
             // store.set('currentStatus', currentStatus);
         } catch (error) {

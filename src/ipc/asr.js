@@ -14,15 +14,22 @@ let replacementRules = {};
 export function setupASR(win) {
   logger.info('开始设置 ASR');
   let lyricsWindow
+  let asr_config = {}
   let asrProcess = new ChildProcessManager(path.join(__dirname, '../../child_process/asr_process/asr_process.js'))
 
 
-  asrProcess.on('message', (message) => {
-    logger.info('收到 ASR 进程消息', { message });
-    let text = message.text || message
-    let speaker = message.speaker || ''
+  asrProcess.on('message', (res) => {
+    logger.info('get ASR message', res);
+    let text = res.text || res
+    let speaker = res.speaker || ''
     // 应用替换规则
     let processedMessage = applyReplacementRules(text);
+    if (asr_config.censor_active) {
+      processedMessage = censor(processedMessage)
+    }
+    if (asr_config.use_translate) {
+      console.log('to lang', asr_config.langPickerIndex)
+    }
 
     clipboard.writeText(processedMessage);
     win.webContents.send('asr-message', { text: processedMessage, speaker: speaker });
@@ -38,6 +45,7 @@ export function setupASR(win) {
 
   ipcMain.handle('start-asr', async (_, data) => {
     logger.info('收到启动 ASR 请求', { data });
+    asr_config = data
     if (!asrProcess.exist()) {
       // 读取替换规则文件
       if (data.modelDir) {
@@ -61,6 +69,7 @@ export function setupASR(win) {
   });
 
   ipcMain.handle('stop-asr', () => {
+    asr_config = {}
     logger.info('收到停止 ASR 请求');
     if (asrProcess) {
       asrProcess.send('stop-asr');
