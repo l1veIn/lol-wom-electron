@@ -1,11 +1,16 @@
 const Datastore = require('nedb');
-const { ipcMain } = require('electron');
+const { ipcMain, app } = require('electron');
 import logger from '../utils/logger';
+import path from 'path';
 
 export function setupNedb() {
     logger.info('开始设置 NeDB');
-    const db = new Datastore({ filename: 'game-shell-data.db', autoload: true });
-    logger.debug('NeDB 数据库已创建', { filename: 'game-shell-data.db' });
+    
+    // 获取应用数据路径
+    const dbPath = path.join(app.getPath('userData'), 'game-shell-data.db');
+    const db = new Datastore({ filename: dbPath, autoload: true });
+
+    logger.debug('NeDB 数据库已创建', { filename: dbPath });
 
     ipcMain.handle('get-game-data', (event, gameIds) => {
         logger.debug('收到 get-game-data 请求', { gameIds });
