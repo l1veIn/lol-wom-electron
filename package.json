@@ -17,6 +17,11 @@
     "build:mac": "npm run build && electron-builder --mac",
     "build:linux": "npm run build && electron-builder --linux"
   },
+  "build": {
+    "mac": {
+      "asar": false
+    }
+  },
   "dependencies": {
     "@electron-toolkit/preload": "^3.0.1",
     "@electron-toolkit/utils": "^3.0.0",
@@ -35,7 +40,7 @@
     "node-global-key-listener": "^0.3.0",
     "paddleocrjson": "^1.1.1-a",
     "rimraf": "^6.0.1",
-    "robotjs": "^0.6.0",
+    "@jitsi/robotjs": "^0.6.0",
     "sharp": "^0.33.5",
     "sherpa-onnx-node": "^1.10.20",
     "simplebig": "^0.0.3",
