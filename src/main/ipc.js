@@ -1,7 +1,7 @@
 import { ipcMain, dialog, shell, BrowserWindow, app } from 'electron';
 import icon from '../../resources/icon.png?asset'
 const { exec } = require('child_process');
-import { init_lcu, getCurrentSummoner, get, post, getClientUrl } from '../lcu/client';
+import { init_lcu, getCurrentSummoner, get, post, getClientUrl, getCurrentRegion } from '../lcu/client';
 import ChildProcessManager from '../utils/child_process_manager.js';
 
 import { setupASR } from '../ipc/asr';
@@ -43,6 +43,7 @@ export function setupIPC(win, store) {
   })
   ipcMain.handle('init_lcu', () => init_lcu(win));
   ipcMain.handle('current-summoner', getCurrentSummoner);
+  ipcMain.handle('current-region', getCurrentRegion);
   ipcMain.handle('get-client-url', getClientUrl);
   ipcMain.handle('get-url', get);
   ipcMain.handle('post-url', post)

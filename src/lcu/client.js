@@ -101,3 +101,14 @@ export async function getCurrentSummoner() {
 	}
 }
 
+export async function getCurrentRegion() {
+	logger.info('获取当前区服');
+	try {
+		let { rsoPlatformId, region } = credentials
+		logger.info('获取当前区服', { rsoPlatformId, region });
+		return { rsoPlatformId, region }
+	} catch (error) {
+		logger.error('获取当前区服失败', { error });
+		throw error;
+	}
+}
