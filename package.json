@@ -1,6 +1,6 @@
 {
   "name": "lol_wom_helper",
-  "version": "1.0.5",
+  "version": "1.1.0",
   "description": "LOL互动助手",
   "main": "./out/main/index.js",
   "author": "kaihei.online",

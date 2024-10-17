@@ -117,7 +117,8 @@ class OCRService {
     initializeOCREngine() {
         let that = this
         // ... 初始化OCR引擎的代码 ...
-        let ocrEnginePath = path.join(__dirname, '../../child_process/ocr/ocr_engine');
+        let ocrEnginePath = path.join(__dirname, '../../resources/ocr_engine');
+        ocrEnginePath = ocrEnginePath.replace('app.asar', 'app.asar.unpacked')
         let args = ['--models=' + path.join(ocrEnginePath, './models')]
         if (this.config.lang == 'ko') {
             args.push('--det=ch_PP-OCRv3_det_infer.onnx')
