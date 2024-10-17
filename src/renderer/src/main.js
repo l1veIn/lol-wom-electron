@@ -7,7 +7,7 @@ import OCR from './pages/ocr.vue'
 const routes = [
     // 在这里添加您的路由配置
     // 例如: { path: '/', component: Home }
-    { path: '/lyrics', component: Lyrics },
+    { path: '/', component: Lyrics },
     { path: '/ocr', component: OCR }
 ]
 
