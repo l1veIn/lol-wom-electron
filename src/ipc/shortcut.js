@@ -65,8 +65,8 @@ export function setupShortcut(win, sender, ocrInstance) {
     logger.info('快捷键子进程已启动');
 
     // 注册默认的快捷键
-    currentStatus['PAGE UP'] = '';
-    currentStatus['PAGE DOWN'] = '';
+    // currentStatus['PAGE UP'] = '';
+    // currentStatus['PAGE DOWN'] = '';
     // 打印当前快捷键状态并注册
     Object.entries(currentStatus).forEach(([key, value]) => {
         console.log(key + ': ' + value);

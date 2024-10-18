@@ -2,6 +2,7 @@ const { ipcMain, BrowserWindow, screen, desktopCapturer } = require('electron');
 const { spawn } = require('child_process');
 const { join } = require('path');
 const path = require('path');
+import { is } from '@electron-toolkit/utils'
 const sharp = require('sharp');
 const { app } = require('electron');
 
@@ -73,7 +74,11 @@ class OCRService {
         });
         this.ocrWindow.setMinimumSize(100, 100)
         this.ocrWindow.setAlwaysOnTop(true, 'screen-saver')
-        this.ocrWindow.loadURL('http://localhost:5173/ocr');
+        if (is.dev) {
+            this.ocrWindow.loadURL('http://localhost:5173/ocr');
+        } else {
+            this.ocrWindow.loadFile(join(__dirname, '../renderer/index.html/ocr'))
+        }
         this.ocrWindow.setBounds(this.monitorRegion);
 
         this.ocrWindow.show();

@@ -203,19 +203,23 @@ function setupASR(message) {
       recognizer.decode(stream);
       const r = recognizer.getResult(stream);
       if (r.text.length > 0) {
-        let text = r.text.toLowerCase().trim();
+        let text = r.text;
+        // let text = r.text.toLowerCase().trim();
         if (message.use_censor_words) {
+          console.log('use_censor_words')
           text = censor(text)
         }
         if (message.use_simplified_chinese_to_traditional) {
+          console.log('use_simplified_chinese_to_traditional')
           text = S.s2t(text)
         }
         if (message.use_speaker_diarization) {
+          console.log('use_speaker_diarization')
           process.send({ text: text, speaker: currentSpeaker });
         } else {
           process.send({ text: text });
         }
-        logger.info('识别结果', { index, text, currentSpeaker });
+        logger.info('recognize result', { index, text, currentSpeaker });
         index += 1;
       }
     }
