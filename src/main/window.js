@@ -53,6 +53,17 @@ export function createWindow() {
   } else {
     const defaultUrl = "https://kaihei.online/lol-wom-helper-v1.1";
     mainWindow.loadURL(defaultUrl);
+    
+    // 禁止用户打开控制台
+    // mainWindow.webContents.on('did-finish-load', () => {
+    //   mainWindow.webContents.executeJavaScript(`
+    //     console.log = function() {}
+    //     console.error = function() {}
+    //     console.warn = function() {}
+    //   `)
+    // })
+    // mainWindow.webContents.openDevTools({ mode: 'detach' })
+
     // const checkUrlAvailability = async (url) => {
     //   try {
     //     const response = await fetch(url, { method: 'HEAD' });
