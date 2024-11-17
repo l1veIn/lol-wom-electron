@@ -16,7 +16,10 @@ jobs:
           - osx-arm64
           - osx-x64
           - linux-x64
+          # - linux-armv7l
+          # - linux-arm64
           - win-x64
+          # - win-arm64
 
         include:
           - runtime: osx-arm64
@@ -27,9 +30,18 @@ jobs:
 
           - runtime: linux-x64
             os: ubuntu-latest
-
+  
+          # - runtime: linux-armv7l
+          #   os: ubuntu-latest
+  
+          # - runtime: linux-arm64
+          #   os: ubuntu-latest
+  
           - runtime: win-x64
             os: windows-latest
+  
+          # - runtime: win-arm64
+          #   os: windows-latest
 
     runs-on: ${{ matrix.os }}
 
@@ -53,10 +65,11 @@ jobs:
         python -m pip install --upgrade pip
         python -m pip install setuptools
 
-    - name: Use Node.js
+    - name: Use Node.js #${{ matrix.node-version }}
       uses: actions/setup-node@v4
       with:
         node-version: ${{ matrix.node-version }}
+        # node-version: 'latest'
         cache: "npm"
     - run: npm install
     
@@ -66,7 +79,7 @@ jobs:
       with:
         path: ./package.json
 
-    - name: Build with Node.js
+    - name: Build with Node.js #${{ matrix.node-version}}
       run: npm run build
 
     - name: Build with electron-builder arm64
@@ -101,6 +114,20 @@ jobs:
         name: lol_wom_helper-${{ steps.getPackageInfo.outputs.version }}-nightly-mac-x64.dmg
         path: dist/lol_wom_helper-${{ steps.getPackageInfo.outputs.version }}.dmg
 
+    # - name: Upload .snap arm64 x64 Artifact
+    #   uses: actions/upload-artifact@v4
+    #   if: startsWith(matrix.os, 'ubuntu') && startsWith(matrix.runtime, 'linux-arm64')
+    #   with:
+    #     name: lol_wom_helper-${{ steps.getPackageInfo.outputs.version }}-nightly_arm64.snap
+    #     path: dist/lol_wom_helper_${{ steps.getPackageInfo.outputs.version }}-arm64.snap
+
+    # - name: Upload .AppImage arm64 x64 Artifact
+    #   uses: actions/upload-artifact@v4
+    #   if: startsWith(matrix.os, 'ubuntu') && startsWith(matrix.runtime, 'linux-arm64')
+    #   with:
+    #     name: lol_wom_helper-${{ steps.getPackageInfo.outputs.version }}-nightly_arm64.AppImage
+    #     path: dist/lol_wom_helper-${{ steps.getPackageInfo.outputs.version }}.AppImage
+
     - name: Upload .AppImage x64 Artifact
       uses: actions/upload-artifact@v4
       if: startsWith(matrix.os, 'ubuntu') && startsWith(matrix.runtime, 'linux-x64')
@@ -115,9 +142,31 @@ jobs:
         name: lol_wom_helper-${{ steps.getPackageInfo.outputs.version }}-nightly_amd64.snap
         path: dist/lol_wom_helper_${{ steps.getPackageInfo.outputs.version }}_amd64.snap
 
+    # - name: Upload .deb ARMv7l Artifact
+    #   uses: actions/upload-artifact@v4
+    #   if: startsWith(matrix.os, 'ubuntu') && startsWith(matrix.runtime, 'linux-armv7l')
+    #   with:
+    #     name: lol_wom_helper-${{ steps.getPackageInfo.outputs.version }}_armv7l.deb
+    #     path: dist/lol_wom_helper-${{ steps.getPackageInfo.outputs.version }}-armv7l.deb
+
+    # - name: Upload .AppImage ARMv7l Artifact
+    #   uses: actions/upload-artifact@v4
+    #   if: startsWith(matrix.os, 'ubuntu') && startsWith(matrix.runtime, 'linux-armv7l')
+    #   with:
+    #     name: lol_wom_helper-${{ steps.getPackageInfo.outputs.version }}_armv7l.AppImage
+    #     path: dist/lol_wom_helper-${{ steps.getPackageInfo.outputs.version }}-armv7l.AppImage
+
     - name: Upload .exe x64 Artifact
       uses: actions/upload-artifact@v4
       if: startsWith(matrix.os, 'windows') && startsWith(matrix.runtime, 'win-x64')
       with:
         name: lol_wom_helper-${{ steps.getPackageInfo.outputs.version }}-nightly_x64-Setup.exe
         path: dist/lol_wom_helper-${{ steps.getPackageInfo.outputs.version }}-setup.exe
+
+    # - name: Upload .exe arm64 Artifact
+    #   uses: actions/upload-artifact@v4
+    #   if: startsWith(matrix.os, 'windows') && startsWith(matrix.runtime, 'win-arm64')
+    #   with:
+    #     name: lol_wom_helper-${{ steps.getPackageInfo.outputs.version }}-nightly_arm64-Setup.exe
+    #     path: dist/lol_wom_helper Setup ${{ steps.getPackageInfo.outputs.version }}.exe
+
