@@ -1,0 +1,172 @@
+name: Build
+
+on:
+  schedule:
+    - cron: '0 3 * * *'
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        node-version: [22.x]
+        runtime:
+          - osx-arm64
+          - osx-x64
+          - linux-x64
+          # - linux-armv7l
+          # - linux-arm64
+          - win-x64
+          # - win-arm64
+
+        include:
+          - runtime: osx-arm64
+            os: macOS-latest
+
+          - runtime: osx-x64
+            os: macOS-latest
+
+          - runtime: linux-x64
+            os: ubuntu-latest
+  
+          # - runtime: linux-armv7l
+          #   os: ubuntu-latest
+  
+          # - runtime: linux-arm64
+          #   os: ubuntu-latest
+  
+          - runtime: win-x64
+            os: windows-latest
+  
+          # - runtime: win-arm64
+          #   os: windows-latest
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Install libarchive-tools
+      if: startsWith(matrix.os, 'ubuntu')
+      run: |
+        sudo apt update; sudo apt -y install libarchive-tools build-essential;
+        sudo apt install -y libx11-dev libxtst-dev libxss-dev libpng-dev libjpeg-dev snapd;
+        sudo snap install snapcraft --classic;
+        echo "Version Number ${{ toJson(job) }} ${{ toJson(needs) }}";
+
+    - name: Set up Python 3.9
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.9'
+    - run: |
+        python -m pip install --upgrade pip
+        python -m pip install setuptools
+
+    - name: Use Node.js #${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        # node-version: 'latest'
+        cache: "npm"
+    - run: npm install
+    
+    - name: Get Version Number
+      id: getPackageInfo
+      uses: jaywcjlove/github-action-package@main
+      with:
+        path: ./package.json
+
+    - name: Build with Node.js #${{ matrix.node-version}}
+      run: npm run build
+
+    - name: Build with electron-builder arm64
+      if: contains(matrix.runtime, 'arm64')
+      run: npx electron-builder --arm64 --publish never
+
+    - name: Build with electron-builder x64
+      if: contains(matrix.runtime, 'x64')
+      run: npx electron-builder --x64 --publish never
+
+    - name: ls Build File
+      if: startsWith(matrix.os, 'windows') == false
+      run: echo -e "\n构建目录内容如下:"; ls -la dist/
+
+    - name: ls Build File windows
+      if: startsWith(matrix.os, 'windows') && startsWith(matrix.runtime, 'win')
+      run: |
+        Write-Host "`n构建目录内容如下:" -ForegroundColor Green
+        Get-ChildItem -Path "dist\" -Force
+
+    - name: Upload .dmg arm64 Artifact
+      uses: actions/upload-artifact@v4
+      if: startsWith(matrix.os, 'macos') && startsWith(matrix.runtime, 'osx-arm64')
+      with:
+        name: lol_wom_helper-${{ steps.getPackageInfo.outputs.version }}-nightly-mac-arm64.dmg
+        path: dist/lol_wom_helper-${{ steps.getPackageInfo.outputs.version }}-arm64.dmg
+
+    - name: Upload .dmg x64 Artifact
+      uses: actions/upload-artifact@v4
+      if: startsWith(matrix.os, 'macos') && startsWith(matrix.runtime, 'osx-x64')
+      with:
+        name: lol_wom_helper-${{ steps.getPackageInfo.outputs.version }}-nightly-mac-x64.dmg
+        path: dist/lol_wom_helper-${{ steps.getPackageInfo.outputs.version }}.dmg
+
+    # - name: Upload .snap arm64 x64 Artifact
+    #   uses: actions/upload-artifact@v4
+    #   if: startsWith(matrix.os, 'ubuntu') && startsWith(matrix.runtime, 'linux-arm64')
+    #   with:
+    #     name: lol_wom_helper-${{ steps.getPackageInfo.outputs.version }}-nightly_arm64.snap
+    #     path: dist/lol_wom_helper_${{ steps.getPackageInfo.outputs.version }}-arm64.snap
+
+    # - name: Upload .AppImage arm64 x64 Artifact
+    #   uses: actions/upload-artifact@v4
+    #   if: startsWith(matrix.os, 'ubuntu') && startsWith(matrix.runtime, 'linux-arm64')
+    #   with:
+    #     name: lol_wom_helper-${{ steps.getPackageInfo.outputs.version }}-nightly_arm64.AppImage
+    #     path: dist/lol_wom_helper-${{ steps.getPackageInfo.outputs.version }}.AppImage
+
+    - name: Upload .AppImage x64 Artifact
+      uses: actions/upload-artifact@v4
+      if: startsWith(matrix.os, 'ubuntu') && startsWith(matrix.runtime, 'linux-x64')
+      with:
+        name: lol_wom_helper-${{ steps.getPackageInfo.outputs.version }}-nightly-amd64.AppImage
+        path: dist/lol_wom_helper-${{ steps.getPackageInfo.outputs.version }}.AppImage
+
+    - name: Upload .deb amd x64 Artifact
+      uses: actions/upload-artifact@v4
+      if: startsWith(matrix.os, 'ubuntu') && startsWith(matrix.runtime, 'linux-x64')
+      with:
+        name: lol_wom_helper-${{ steps.getPackageInfo.outputs.version }}-nightly_amd64.snap
+        path: dist/lol_wom_helper_${{ steps.getPackageInfo.outputs.version }}_amd64.snap
+
+    # - name: Upload .deb ARMv7l Artifact
+    #   uses: actions/upload-artifact@v4
+    #   if: startsWith(matrix.os, 'ubuntu') && startsWith(matrix.runtime, 'linux-armv7l')
+    #   with:
+    #     name: lol_wom_helper-${{ steps.getPackageInfo.outputs.version }}_armv7l.deb
+    #     path: dist/lol_wom_helper-${{ steps.getPackageInfo.outputs.version }}-armv7l.deb
+
+    # - name: Upload .AppImage ARMv7l Artifact
+    #   uses: actions/upload-artifact@v4
+    #   if: startsWith(matrix.os, 'ubuntu') && startsWith(matrix.runtime, 'linux-armv7l')
+    #   with:
+    #     name: lol_wom_helper-${{ steps.getPackageInfo.outputs.version }}_armv7l.AppImage
+    #     path: dist/lol_wom_helper-${{ steps.getPackageInfo.outputs.version }}-armv7l.AppImage
+
+    - name: Upload .exe x64 Artifact
+      uses: actions/upload-artifact@v4
+      if: startsWith(matrix.os, 'windows') && startsWith(matrix.runtime, 'win-x64')
+      with:
+        name: lol_wom_helper-${{ steps.getPackageInfo.outputs.version }}-nightly_x64-Setup.exe
+        path: dist/lol_wom_helper Setup ${{ steps.getPackageInfo.outputs.version }}.exe
+
+    # - name: Upload .exe arm64 Artifact
+    #   uses: actions/upload-artifact@v4
+    #   if: startsWith(matrix.os, 'windows') && startsWith(matrix.runtime, 'win-arm64')
+    #   with:
+    #     name: lol_wom_helper-${{ steps.getPackageInfo.outputs.version }}-nightly_arm64-Setup.exe
+    #     path: dist/lol_wom_helper Setup ${{ steps.getPackageInfo.outputs.version }}.exe
+
