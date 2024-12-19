@@ -3,5 +3,5 @@ dist
 out
 .DS_Store
 *.log*
-*.onnx
+resources/ocr_engine
 game-shell-data.db
