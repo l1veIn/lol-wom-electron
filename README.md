@@ -1,3 +1,12 @@
+⚠️ 此项目已废弃 (Deprecated)
+
+由于依赖的第三方接口失效，本项目已不再维护且无法正常运行。代码仅供学习参考。
+
+⚠️ Project Discontinued
+
+This project is no longer maintained because the underlying API is offline. The code is kept for archival purposes only.
+
+
 <div>
   <div>
     <img
